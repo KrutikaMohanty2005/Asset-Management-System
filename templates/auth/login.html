@@ -4,32 +4,62 @@
 
 {% block content_only %}
 <div class="login-wrapper">
-    <div class="login-card">
-        <div class="login-header">
-            <div class="login-logo">
-                <i class="fa-solid fa-cube"></i>
+    <div class="login-container">
+        <!-- Left Side - Image -->
+        <div class="login-left">
+            <img src="{{ url_for('static', filename='images/railway.jpg') }}" alt="Indian Railways" class="login-bg-image">
+            <div class="login-left-overlay">
+                <div class="welcome-badge">
+                    <i class="fa-solid fa-train"></i>
+                    <span>ON TIME</span>
+                </div>
+                <h2>WELCOME TO</h2>
+                <h1>INDIAN RAILWAYS 2026</h1>
+                <p>Asset Management System</p>
             </div>
-            <h1>AMS</h1>
-            <p>Sign in to your account</p>
         </div>
 
-        <form method="POST" action="{{ url_for('auth.login') }}">
-            <div class="form-group">
-                <label><i class="fa-solid fa-user"></i> Username</label>
-                <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+        <!-- Right Side - Login Form -->
+        <div class="login-right">
+            <div class="login-card">
+                <div class="login-header">
+                    <div class="ecor-logo">
+                        <img src="{{ url_for('static', filename='images/ecorlogo.jpg') }}" alt="East Coast Railway" class="ecor-logo-img">
+                    </div>
+                    <div class="railway-emblem">
+                        <svg viewBox="0 0 100 100" width="48" height="48">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#1a47a0" stroke-width="3"/>
+                            <circle cx="50" cy="50" r="38" fill="none" stroke="#1a47a0" stroke-width="1.5"/>
+                            <text x="50" y="42" text-anchor="middle" font-size="8" font-weight="bold" fill="#1a47a0">भारतीय</text>
+                            <text x="50" y="52" text-anchor="middle" font-size="8" font-weight="bold" fill="#1a47a0">RAILWAYS</text>
+                            <text x="50" y="62" text-anchor="middle" font-size="6" fill="#1a47a0">भारत</text>
+                            <line x1="20" y1="35" x2="80" y2="35" stroke="#1a47a0" stroke-width="1"/>
+                            <line x1="20" y1="68" x2="80" y2="68" stroke="#1a47a0" stroke-width="1"/>
+                        </svg>
+                    </div>
+                    <h1>Asset Management System</h1>
+                    <p>East Coast Railway - Digital Asset Tracking</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-user"></i> Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Enter username" required>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-lock"></i> Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="btn-login">
+                        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <p>Demo Credentials</p>
+                    <code>admin / admin123</code>
+                </div>
             </div>
-            <div class="form-group">
-                <label><i class="fa-solid fa-lock"></i> Password</label>
-                <input type="password" name="password" class="form-control" placeholder="Enter password" required>
-            </div>
-            <button type="submit" class="btn-login">
-                <i class="fa-solid fa-right-to-bracket"></i> Sign In
-            </button>
-        </form>
-        
-        <div class="login-footer">
-            <p>Demo Credentials</p>
-            <code>admin / admin123</code>
         </div>
     </div>
 </div>

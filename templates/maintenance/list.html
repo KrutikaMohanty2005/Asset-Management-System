@@ -3,219 +3,142 @@
 {% block title %}Maintenance Logs - Asset Management System{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="mb-4">
-        <h1 class="h2 mb-1" style="font-family: var(--font-heading);">Maintenance Logs</h1>
-        <p class="text-muted mb-0">Record, track, and review company equipment repairs and routine servicing</p>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Maintenance Logs</h1>
+            <p class="page-subtitle">Track repair requests and service history</p>
+        </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Logs Table (Left Column) -->
-        <div class="col-12 col-lg-8">
-            <div class="glass-panel p-0 overflow-hidden">
-                <div class="p-4 border-bottom border-secondary d-flex justify-content-between align-items-center">
-                    <h3 class="h5 mb-0" style="font-family: var(--font-heading);"><i class="fa-solid fa-list-check me-2 text-primary"></i> Service History</h3>
-                    <span class="badge bg-secondary font-monospace">{{ logs|length }} Entries</span>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table custom-table align-middle">
-                        <thead>
+    <div class="content-grid">
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-screwdriver-wrench"></i> Service History</h2>
+                <span class="count-badge">{{ logs|length }} Entries</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Requested</th>
+                            <th>Serviced</th>
+                            <th>Vendor</th>
+                            <th>Cost</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
                             <tr>
-                                <th>Asset ID</th>
-                                <th>Asset Name</th>
-                                <th>Requested</th>
-                                <th>Serviced</th>
-                                <th>Vendor</th>
-                                <th>Cost</th>
-                                <th>Status</th>
-                                <th style="width: 140px;" class="text-end">Actions</th>
+                                <td>
+                                    <span class="asset-id">{{ log.asset.asset_id }}</span>
+                                    <span class="text-muted"> - {{ log.asset.name }}</span>
+                                </td>
+                                <td>{{ log.request_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ log.service_date.strftime('%Y-%m-%d') if log.service_date else '-' }}</td>
+                                <td>{{ log.vendor.name if log.vendor else '-' }}</td>
+                                <td>
+                                    {% if log.status == 'Completed' %}
+                                        <span class="fw-semibold">${{ "{:,.2f}".format(log.cost) if log.cost else '0.00' }}</span>
+                                    {% else %}-{% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge {{ 'available' if log.status == 'Completed' else 'maintenance' if log.status in ['Requested', 'In Progress'] else 'retired' }}">{{ log.status }}</span>
+                                </td>
+                                <td class="action-cell">
+                                    {% if log.status == 'Requested' %}
+                                        <button class="btn-action btn-complete" data-log-id="{{ log.id }}" data-asset-name="{{ log.asset.name }}" onclick="openCompleteModal(this)"><i class="fa-solid fa-check"></i></button>
+                                        <form method="POST" action="{{ url_for('maintenance.cancel_log', id=log.id) }}" style="display:inline;" onsubmit="return confirm('Cancel this request?');">
+                                            <button type="submit" class="action-btn delete-btn" title="Cancel"><i class="fa-solid fa-xmark"></i></button>
+                                        </form>
+                                    {% endif %}
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% if logs %}
-                                {% for log in logs %}
-                                    <tr>
-                                        <td class="font-monospace fw-bold text-info">
-                                            <a href="{{ url_for('assets.asset_details', id=log.asset.id) }}" class="text-decoration-none text-info">
-                                                {{ log.asset.asset_id }}
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <div class="fw-semibold">{{ log.asset.name }}</div>
-                                            {% if log.remarks %}
-                                                <div class="text-muted small text-truncate" style="max-width: 200px;" title="{{ log.remarks }}">{{ log.remarks }}</div>
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ log.request_date.strftime('%Y-%m-%d') }}</td>
-                                        <td>{{ log.service_date.strftime('%Y-%m-%d') if log.service_date else '-' }}</td>
-                                        <td>{{ log.vendor.name if log.vendor else '-' }}</td>
-                                        <td>
-                                            {% if log.status == 'Completed' %}
-                                                <span class="fw-bold text-info">${{ "{:,.2f}".format(log.cost) if log.cost else '0.00' }}</span>
-                                            {% else %}
-                                                <span class="text-muted small">Pending</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if log.status == 'Completed' %}bg-success-subtle text-success{% elif log.status == 'Cancelled' %}bg-secondary-subtle text-muted{% else %}bg-warning-subtle text-warning{% endif %}" style="padding: 6px 10px; border-radius: 6px;">
-                                                {{ log.status }}
-                                            </span>
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="d-inline-flex gap-2">
-                                                {% if log.status == 'Requested' %}
-                                                    <button type="button" class="btn btn-sm btn-secondary-premium btn-complete-service" 
-                                                            data-bs-toggle="modal" data-bs-target="#completeModal"
-                                                            data-log-id="{{ log.id }}" data-asset-name="{{ log.asset.name }}"
-                                                            title="Complete Service" style="padding: 6px 12px;">
-                                                        <i class="fa-solid fa-square-check text-success"></i>
-                                                    </button>
-                                                    <form method="POST" action="{{ url_for('maintenance.cancel_log', id=log.id) }}" onsubmit="return confirm('Are you sure you want to cancel this maintenance request?');" style="display:inline;">
-                                                        <button type="submit" class="btn btn-sm btn-secondary-premium" title="Cancel Request" style="padding: 6px 12px;">
-                                                            <i class="fa-solid fa-circle-xmark text-danger"></i>
-                                                        </button>
-                                                    </form>
-                                                {% else %}
-                                                    <span class="text-muted small">-</span>
-                                                {% endif %}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">
-                                        <i class="fa-solid fa-screwdriver-wrench mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
-                                        <p class="mb-0">No maintenance events logged.</p>
-                                    </td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Request Servicing Form (Right Column) -->
-        <div class="col-12 col-lg-4">
-            <div class="glass-panel p-4">
-                <h3 class="h5 mb-4 text-primary" style="font-family: var(--font-heading);"><i class="fa-solid fa-circle-plus me-2"></i> Request Servicing</h3>
-                
-                <form method="POST" action="{{ url_for('maintenance.list_logs') }}">
-                    <!-- Target Asset -->
-                    <div class="custom-form-group">
-                        <label for="asset_id" class="custom-form-label">Asset to Service *</label>
-                        <select class="custom-form-control" id="asset_id" name="asset_id" required>
-                            <option value="" disabled selected>Select Asset</option>
-                            {% for asset in assets %}
-                                <option value="{{ asset.id }}">{{ asset.asset_id }} - {{ asset.name }} ({{ asset.status }})</option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text text-muted">Asset status will update to 'Maintenance' on submission.</div>
-                    </div>
-
-                    <!-- Vendor -->
-                    <div class="custom-form-group">
-                        <label for="vendor_id" class="custom-form-label">Service Vendor</label>
-                        <select class="custom-form-control" id="vendor_id" name="vendor_id">
-                            <option value="">Select Vendor (Optional)</option>
-                            {% for vendor in vendors %}
-                                <option value="{{ vendor.id }}">{{ vendor.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <!-- Remarks -->
-                    <div class="custom-form-group">
-                        <label for="remarks" class="custom-form-label">Description / Issue Remarks</label>
-                        <textarea class="custom-form-control" id="remarks" name="remarks" rows="3" placeholder="Describe the service request or technical issue..." required></textarea>
-                    </div>
-
-                    <!-- Next Maintenance Date -->
-                    <div class="custom-form-group">
-                        <label for="next_maintenance_date" class="custom-form-label">Next Maintenance Date (Optional)</label>
-                        <input type="date" class="custom-form-control" id="next_maintenance_date" name="next_maintenance_date">
-                    </div>
-
-                    <button type="submit" class="btn btn-premium w-100 justify-content-center mt-4">
-                        <i class="fa-solid fa-paper-plane"></i> Submit Request
-                    </button>
-                </form>
-            </div>
+        <div class="form-card">
+            <h2 class="form-title"><i class="fa-solid fa-plus"></i> Request Service</h2>
+            <form method="POST" action="{{ url_for('maintenance.list_logs') }}">
+                <div class="form-group">
+                    <label>Asset *</label>
+                    <select name="asset_id" class="form-control" required>
+                        <option value="" disabled selected>Select Asset</option>
+                        {% for asset in assets %}
+                            <option value="{{ asset.id }}">{{ asset.asset_id }} - {{ asset.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Vendor</label>
+                    <select name="vendor_id" class="form-control">
+                        <option value="">Select Vendor (Optional)</option>
+                        {% for vendor in vendors %}
+                            <option value="{{ vendor.id }}">{{ vendor.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Issue Description *</label>
+                    <textarea name="remarks" class="form-control" rows="3" required placeholder="Describe the issue..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Next Maintenance Date</label>
+                    <input type="date" name="next_maintenance_date" class="form-control">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fa-solid fa-paper-plane"></i> Submit Request</button>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Complete Service Modal -->
-<div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-panel" style="background-color: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-main);">
-            <div class="modal-header border-bottom border-secondary">
-                <h5 class="modal-title" id="completeModalLabel" style="font-family: var(--font-heading);"><i class="fa-solid fa-screwdriver-wrench me-2 text-success"></i> Complete Service Logs</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Complete Modal -->
+<div class="modal-overlay" id="completeModal" style="display:none;">
+    <div class="modal-content">
+        <h3><i class="fa-solid fa-screwdriver-wrench"></i> Complete Service</h3>
+        <p>Asset: <strong id="modal-asset-name"></strong></p>
+        <form id="completeForm" method="POST" action="">
+            <div class="form-group">
+                <label>Service Cost ($)</label>
+                <input type="number" step="0.01" min="0" name="cost" class="form-control" placeholder="0.00" required>
             </div>
-            
-            <form id="completeServiceForm" method="POST" action="">
-                <div class="modal-body">
-                    <p class="small text-muted mb-3">Record maintenance details for asset: <strong class="text-light" id="modal-asset-name"></strong></p>
-                    
-                    <!-- Service Cost -->
-                    <div class="custom-form-group">
-                        <label for="cost" class="custom-form-label">Service / Parts Cost *</label>
-                        <div class="position-relative">
-                            <span class="position-absolute" style="left: 16px; top: 12px; color: var(--text-muted);">$</span>
-                            <input type="number" step="0.01" min="0" class="custom-form-control" style="padding-left: 32px;" 
-                                   id="cost" name="cost" placeholder="0.00" required>
-                        </div>
-                    </div>
-
-                    <!-- Service Remarks -->
-                    <div class="custom-form-group">
-                        <label for="modal_remarks" class="custom-form-label">Maintenance Notes</label>
-                        <textarea class="custom-form-control" id="modal_remarks" name="remarks" rows="3" placeholder="Describe parts replaced, calibration done, or notes from technician..." required></textarea>
-                    </div>
-
-                    <!-- Next Maintenance Date -->
-                    <div class="custom-form-group mb-0">
-                        <label for="modal_next_date" class="custom-form-label">Next Scheduled Servicing Date</label>
-                        <input type="date" class="custom-form-control" id="modal_next_date" name="next_maintenance_date">
-                    </div>
-                </div>
-                
-                <div class="modal-footer border-top border-secondary">
-                    <button type="button" class="btn btn-secondary-premium" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-premium">
-                        <i class="fa-solid fa-check"></i> Close & Save
-                    </button>
-                </div>
-            </form>
-        </div>
+            <div class="form-group">
+                <label>Completion Notes</label>
+                <textarea name="remarks" class="form-control" rows="3" required placeholder="Describe work done..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Next Maintenance Date</label>
+                <input type="date" name="next_maintenance_date" class="form-control">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-submit"><i class="fa-solid fa-check"></i> Save</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const completeModal = document.getElementById('completeModal');
-        const completeForm = document.getElementById('completeServiceForm');
-        const modalAssetName = document.getElementById('modal-asset-name');
-        
-        // Listen to dynamic buttons to populate Modal parameters
-        const completeButtons = document.querySelectorAll('.btn-complete-service');
-        completeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const logId = btn.getAttribute('data-log-id');
-                const assetName = btn.getAttribute('data-asset-name');
-                
-                // Update form action dynamically
-                completeForm.action = `/maintenance/${logId}/complete`;
-                // Update asset title text
-                modalAssetName.textContent = assetName;
-            });
-        });
-    });
+function openCompleteModal(btn) {
+    const modal = document.getElementById('completeModal');
+    const form = document.getElementById('completeForm');
+    const nameEl = document.getElementById('modal-asset-name');
+    
+    form.action = '/maintenance/' + btn.dataset.logId + '/complete';
+    nameEl.textContent = btn.dataset.assetName;
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('completeModal').style.display = 'none';
+}
 </script>
 {% endblock %}

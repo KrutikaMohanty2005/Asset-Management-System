@@ -2,6 +2,7 @@ from flask import Flask, redirect, url_for, session
 from config import Config
 from models import db
 from database import init_db
+from errors import register_error_handlers
 import os
 
 # Import Blueprints
@@ -48,6 +49,9 @@ def create_app():
     app.register_blueprint(notifications_bp)
     app.register_blueprint(users_bp)
     
+    # Register Error Handlers
+    register_error_handlers(app)
+    
     # Global root redirect helper
     @app.route('/')
     def index():
@@ -60,5 +64,4 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    # Running Flask local dev server on port 5000
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -2,55 +2,34 @@
 
 {% block title %}Login - Asset Management System{% endblock %}
 
-{% block content %}
+{% block content_only %}
 <div class="login-wrapper">
-    <div class="glass-panel login-card">
-        <div class="text-center mb-4">
-            <div class="d-inline-flex align-items-center justify-content-center bg-primary rounded-circle mb-3 text-white" style="width: 60px; height: 60px; background: var(--accent-gradient) !important; box-shadow: 0 4px 20px var(--accent-glow);">
-                <i class="fa-solid fa-boxes-stacked" style="font-size: 2rem;"></i>
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="fa-solid fa-cube"></i>
             </div>
-            <h2 class="mb-1" style="font-family: var(--font-heading);">Welcome to AMS</h2>
-            <p class="text-muted small">Sign in to manage company assets</p>
+            <h1>AMS</h1>
+            <p>Sign in to your account</p>
         </div>
 
         <form method="POST" action="{{ url_for('auth.login') }}">
-            <div class="custom-form-group">
-                <label for="username" class="custom-form-label">Username</label>
-                <div class="position-relative">
-                    <span class="position-absolute" style="left: 16px; top: 12px; color: var(--text-muted);">
-                        <i class="fa-solid fa-user"></i>
-                    </span>
-                    <input type="text" class="custom-form-control" style="padding-left: 44px;" id="username" name="username" placeholder="Enter username" required autocomplete="username">
-                </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-user"></i> Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter username" required>
             </div>
-
-            <div class="custom-form-group">
-                <label for="password" class="custom-form-label">Password</label>
-                <div class="position-relative">
-                    <span class="position-absolute" style="left: 16px; top: 12px; color: var(--text-muted);">
-                        <i class="fa-solid fa-lock"></i>
-                    </span>
-                    <input type="password" class="custom-form-control" style="padding-left: 44px;" id="password" name="password" placeholder="Enter password" required autocomplete="current-password">
-                </div>
+            <div class="form-group">
+                <label><i class="fa-solid fa-lock"></i> Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Enter password" required>
             </div>
-
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="remember" style="background-color: var(--bg-input); border-color: var(--border-color);">
-                    <label class="form-check-label small text-muted" for="remember">
-                        Remember me
-                    </label>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-premium w-100 justify-content-center">
+            <button type="submit" class="btn-login">
                 <i class="fa-solid fa-right-to-bracket"></i> Sign In
             </button>
         </form>
         
-        <div class="text-center mt-4">
-            <p class="text-muted small mb-0">Default Admin Credentials:</p>
-            <code class="small text-info">admin / admin123</code>
+        <div class="login-footer">
+            <p>Demo Credentials</p>
+            <code>admin / admin123</code>
         </div>
     </div>
 </div>

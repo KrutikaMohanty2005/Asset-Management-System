@@ -1,275 +1,111 @@
 {% extends "base.html" %}
 
-{% block title %}Asset Details: {{ asset.name }} - Asset Management System{% endblock %}
+{% block title %}{{ asset.name }} - Asset Details{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header Back Navigation -->
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+<div class="page-container">
+    <div class="page-header">
         <div>
-            <a href="{{ url_for('assets.list_assets') }}" class="btn btn-sm btn-secondary-premium mb-3">
-                <i class="fa-solid fa-arrow-left"></i> Back to Inventory
-            </a>
-            <h1 class="h2 mb-1" style="font-family: var(--font-heading);">{{ asset.name }}</h1>
-            <p class="text-muted mb-0">System Identifier: <span class="font-monospace text-info fw-bold">{{ asset.asset_id }}</span></p>
+            <a href="{{ url_for('assets.list_assets') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Inventory</a>
+            <h1 class="page-title">{{ asset.name }}</h1>
+            <p class="page-subtitle">Asset ID: <span class="asset-id">{{ asset.asset_id }}</span></p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('assets.edit_asset', id=asset.id) }}" class="btn btn-secondary-premium">
-                <i class="fa-solid fa-pen"></i> Edit Asset
-            </a>
-            {% if asset.status != 'Retired' %}
-                {% if asset.status == 'Available' %}
-                    <a href="{{ url_for('assets.edit_asset', id=asset.id) }}?status=Assigned" class="btn btn-premium">
-                        <i class="fa-solid fa-user-check"></i> Assign Asset
-                    </a>
-                {% elif asset.status == 'Assigned' %}
-                    <form method="POST" action="{{ url_for('assets.edit_asset', id=asset.id) }}" style="display:inline;">
-                        <input type="hidden" name="name" value="{{ asset.name }}">
-                        <input type="hidden" name="category_id" value="{{ asset.category_id }}">
-                        <input type="hidden" name="location_id" value="{{ asset.location_id }}">
-                        <input type="hidden" name="status" value="Available">
-                        <button type="submit" class="btn btn-premium" onclick="return confirm('Confirm check-in / return of this asset?');">
-                            <i class="fa-solid fa-right-to-bracket"></i> Check-in / Return
-                        </button>
-                    </form>
-                {% endif %}
-            {% endif %}
+        <div class="header-actions">
+            <a href="{{ url_for('assets.edit_asset', id=asset.id) }}" class="btn-action btn-outline-action"><i class="fa-solid fa-pen"></i> Edit</a>
         </div>
     </div>
 
-    <!-- Quick Overview Row -->
-    <div class="row g-4 mb-4">
-        <!-- Asset Visual & QR Code Panel -->
-        <div class="col-12 col-md-4">
-            <div class="glass-panel p-4 text-center d-flex flex-column justify-content-between align-items-center" style="height: 100%;">
-                <!-- Image Display -->
-                <div class="mb-3 w-100 rounded-3 overflow-hidden d-flex align-items-center justify-content-center border border-secondary" style="height: 200px; background: rgba(255, 255, 255, 0.02);">
-                    {% if asset.image_path %}
-                        <img src="{{ url_for('static', filename=asset.image_path) }}" alt="{{ asset.name }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                    {% else %}
-                        <div class="text-muted">
-                            <i class="fa-solid fa-image" style="font-size: 3.5rem; opacity: 0.3;"></i>
-                            <div class="small mt-2">No photo uploaded</div>
-                        </div>
-                    {% endif %}
+    <div class="content-grid">
+        <!-- Asset Info -->
+        <div class="table-card" style="padding: 24px;">
+            <div class="asset-detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">Status</span>
+                    <span class="status-badge {{ asset.status.lower() }}">{{ asset.status }}</span>
                 </div>
-                
-                <!-- Status Badge -->
-                <div class="mb-3">
-                    <span class="status-badge {{ asset.status.lower() }}" style="font-size: 0.9rem; padding: 8px 18px;">
-                        {{ asset.status }}
+                <div class="detail-item">
+                    <span class="detail-label">Category</span>
+                    <span class="detail-value">{{ asset.category.name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Location</span>
+                    <span class="detail-value">{{ asset.location.name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Brand & Model</span>
+                    <span class="detail-value">{{ asset.brand_model or 'Not Specified' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Serial Number</span>
+                    <span class="detail-value font-mono">{{ asset.serial_number or 'Not Specified' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Purchase Date</span>
+                    <span class="detail-value">{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else 'Not Specified' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Purchase Cost</span>
+                    <span class="detail-value">${{ "{:,.2f}".format(asset.purchase_cost) if asset.purchase_cost else '0.00' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Warranty Expiry</span>
+                    <span class="detail-value">
+                        {% if asset.warranty_expiry %}
+                            {{ asset.warranty_expiry.strftime('%Y-%m-%d') }}
+                            {% if asset.warranty_expiry < datetime_today %}
+                                <span class="status-badge retired" style="font-size:10px;">Expired</span>
+                            {% else %}
+                                <span class="status-badge available" style="font-size:10px;">Active</span>
+                            {% endif %}
+                        {% else %}
+                            Not Specified
+                        {% endif %}
                     </span>
                 </div>
-
-                <!-- QR Code Display -->
-                <div class="p-3 bg-white rounded-3 shadow-sm mb-2" style="border: 1px solid var(--border-color);">
-                    {% if asset.qr_code_path %}
-                        <img src="{{ asset.qr_code_path }}" alt="QR Code" style="width: 130px; height: 130px;">
-                    {% endif %}
+                <div class="detail-item">
+                    <span class="detail-label">Vendor</span>
+                    <span class="detail-value">{{ asset.vendor.name if asset.vendor else 'None' }}</span>
                 </div>
-                <span class="small text-muted font-monospace">{{ asset.asset_id }}</span>
+                <div class="detail-item">
+                    <span class="detail-label">Assigned To</span>
+                    <span class="detail-value">{{ asset.assigned_employee.name if asset.assigned_employee else 'Unassigned' }}</span>
+                </div>
             </div>
+
+            {% if asset.qr_code_path %}
+            <div style="margin-top: 20px; text-align: center;">
+                <img src="{{ asset.qr_code_path }}" alt="QR Code" style="width: 120px; height: 120px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <p class="text-muted" style="font-size: 12px; margin-top: 4px;">{{ asset.asset_id }}</p>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Details Tabbed Panel -->
-        <div class="col-12 col-md-8">
-            <div class="glass-panel p-4 h-100">
-                <!-- Navigation Tabs -->
-                <ul class="custom-nav-tabs" id="assetTabs" role="tablist">
-                    <li>
-                        <a class="custom-tab-link active" id="info-tab" data-bs-toggle="tab" href="#info" role="tab">General Information</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="assignments-tab" data-bs-toggle="tab" href="#assignments" role="tab">Assignments ({{ assignments|length }})</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="maintenance-tab" data-bs-toggle="tab" href="#maintenance" role="tab">Maintenance ({{ maintenance|length }})</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="timeline-tab" data-bs-toggle="tab" href="#timeline" role="tab">Timeline Log</a>
-                    </li>
-                </ul>
-
-                <!-- Tab Contents -->
-                <div class="tab-content pt-2" id="assetTabContent">
-                    <!-- General Information -->
-                    <div class="tab-pane fade show active" id="info" role="tabpanel">
-                        <div class="row g-3">
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Category</span>
-                                <span class="fw-semibold">{{ asset.category.name }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Location</span>
-                                <span class="fw-semibold"><i class="fa-solid fa-location-dot text-muted me-1"></i> {{ asset.location.name }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Brand & Model</span>
-                                <span class="fw-semibold">{{ asset.brand_model or 'Not Specified' }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Serial Number</span>
-                                <span class="fw-semibold font-monospace">{{ asset.serial_number or 'Not Specified' }}</span>
-                            </div>
-                            <div class="col-12"><hr class="border-secondary my-2"></div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Purchase Date</span>
-                                <span class="fw-semibold">{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else 'Not Specified' }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Purchase Cost</span>
-                                <span class="fw-semibold text-info">${{ "{:,.2f}".format(asset.purchase_cost) if asset.purchase_cost else '0.00' }}</span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Warranty Expiry</span>
-                                <span class="fw-semibold">
-                                    {% if asset.warranty_expiry %}
-                                        {{ asset.warranty_expiry.strftime('%Y-%m-%d') }}
-                                        {% if asset.warranty_expiry < datetime_today %}
-                                            <span class="badge bg-danger ms-1">Expired</span>
-                                        {% else %}
-                                            <span class="badge bg-success ms-1">Active</span>
-                                        {% endif %}
-                                    {% else %}
-                                        Not Specified
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Vendor</span>
-                                <span class="fw-semibold">
-                                    {% if asset.vendor %}
-                                        <span title="Contact: {{ asset.vendor.contact_person or '' }} | {{ asset.vendor.email or '' }}">{{ asset.vendor.name }}</span>
-                                    {% else %}
-                                        None
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="col-12"><hr class="border-secondary my-2"></div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Current Owner</span>
-                                <span class="fw-semibold">
-                                    {% if asset.assigned_employee %}
-                                        <i class="fa-solid fa-user text-muted me-1"></i> {{ asset.assigned_employee.name }} (ID: {{ asset.assigned_employee.employee_id }})
-                                    {% else %}
-                                        Unassigned
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="col-sm-6">
-                                <span class="text-muted small d-block">Invoice Receipt</span>
-                                <span>
-                                    {% if asset.invoice_path %}
-                                        <a href="{{ url_for('static', filename=asset.invoice_path) }}" target="_blank" class="btn btn-sm btn-secondary-premium mt-1">
-                                            <i class="fa-solid fa-file-invoice-dollar text-success me-1"></i> View Invoice Document
-                                        </a>
-                                    {% else %}
-                                        No invoice file uploaded
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Assignments History -->
-                    <div class="tab-pane fade" id="assignments" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table custom-table text-start align-middle" style="font-size: 0.9rem;">
-                                <thead>
-                                    <tr>
-                                        <th>Employee</th>
-                                        <th>Assigned Date</th>
-                                        <th>Returned Date</th>
-                                        <th>Assigned By</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if assignments %}
-                                        {% for ass in assignments %}
-                                            <tr>
-                                                <td class="fw-semibold">{{ ass.employee.name }}</td>
-                                                <td>{{ ass.assigned_date.strftime('%Y-%m-%d %H:%M') }}</td>
-                                                <td>
-                                                    {% if ass.returned_date %}
-                                                        {{ ass.returned_date.strftime('%Y-%m-%d %H:%M') }}
-                                                    {% else %}
-                                                        <span class="badge bg-primary">Active Assignment</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>{{ ass.assigner.username }}</td>
-                                                <td class="text-muted small">{{ ass.notes or '-' }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% else %}
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted">No assignment logs found.</td>
-                                        </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Maintenance logs -->
-                    <div class="tab-pane fade" id="maintenance" role="tabpanel">
-                        <div class="table-responsive">
-                            <table class="table custom-table text-start align-middle" style="font-size: 0.9rem;">
-                                <thead>
-                                    <tr>
-                                        <th>Request Date</th>
-                                        <th>Status</th>
-                                        <th>Service Date</th>
-                                        <th>Cost</th>
-                                        <th>Vendor</th>
-                                        <th>Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if maintenance %}
-                                        {% for log in maintenance %}
-                                            <tr>
-                                                <td>{{ log.request_date.strftime('%Y-%m-%d') }}</td>
-                                                <td>
-                                                    <span class="badge {% if log.status == 'Completed' %}bg-success{% elif log.status == 'In Progress' %}bg-info{% elif log.status == 'Cancelled' %}bg-secondary{% else %}bg-warning{% endif %}">
-                                                        {{ log.status }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ log.service_date.strftime('%Y-%m-%d') if log.service_date else '-' }}</td>
-                                                <td class="text-info">${{ "{:,.2f}".format(log.cost) if log.cost else '0.00' }}</td>
-                                                <td>{{ log.vendor.name if log.vendor else '-' }}</td>
-                                                <td class="text-muted small">{{ log.remarks or '-' }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                    {% else %}
-                                        <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">No maintenance logs found.</td>
-                                        </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Timeline Activity Log -->
-                    <div class="tab-pane fade" id="timeline" role="tabpanel">
-                        {% if timeline %}
-                            <div class="timeline mt-2" style="max-height: 280px; overflow-y: auto; padding-right: 10px;">
-                                {% for item in timeline %}
-                                    <div class="timeline-item">
-                                        <div class="timeline-date">{{ item.date.strftime('%Y-%m-%d %H:%M') }}</div>
-                                        <div class="timeline-title d-flex align-items-center gap-2">
-                                            <span class="{{ item.class }}"><i class="fa-solid {{ item.icon }} me-1"></i> {{ item.title }}</span>
-                                        </div>
-                                        <div class="timeline-desc text-muted">{{ item.detail }}</div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4 text-muted">No activity events logged yet.</div>
-                        {% endif %}
-                    </div>
-                </div>
+        <!-- Assignment History -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-clock-rotate-left"></i> Assignment History</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Assigned</th>
+                            <th>Returned</th>
+                            <th>By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ass in assignments %}
+                            <tr>
+                                <td>{{ ass.employee.name }}</td>
+                                <td>{{ ass.assigned_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ ass.returned_date.strftime('%Y-%m-%d %H:%M') if ass.returned_date else '<span class="status-badge assigned" style="font-size:10px;">Active</span>'|safe }}</td>
+                                <td>{{ ass.assigner.username }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

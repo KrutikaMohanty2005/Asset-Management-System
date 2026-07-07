@@ -3,276 +3,182 @@
 {% block title %}System Settings - Asset Management System{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="mb-4">
-        <h1 class="h2 mb-1" style="font-family: var(--font-heading);">System Settings</h1>
-        <p class="text-muted mb-0">Admin control panel for managing application settings, lists, and assets categorization</p>
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">System Settings</h1>
+            <p class="page-subtitle">Configure application settings and manage lists</p>
+        </div>
     </div>
 
-    <!-- System Settings Layout Grid -->
-    <div class="row">
-        <div class="col-12 col-xl-12">
-            <div class="glass-panel p-4">
-                <!-- Tabs Navigation -->
-                <ul class="custom-nav-tabs" id="settingsTabs" role="tablist">
-                    <li>
-                        <a class="custom-tab-link active" id="general-tab" data-bs-toggle="tab" href="#general" role="tab">General & Backups</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="email-tab" data-bs-toggle="tab" href="#email" role="tab">Email SMTP Server</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="categories-tab" data-bs-toggle="tab" href="#categories" role="tab">Categories ({{ categories|length }})</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="locations-tab" data-bs-toggle="tab" href="#locations" role="tab">Locations ({{ locations|length }})</a>
-                    </li>
-                    <li>
-                        <a class="custom-tab-link" id="vendors-tab" data-bs-toggle="tab" href="#vendors" role="tab">Vendors ({{ vendors|length }})</a>
-                    </li>
-                </ul>
+    <div class="table-card" style="padding: 24px;">
+        <!-- Tabs -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('general')">General</button>
+            <button class="tab-btn" onclick="switchTab('email')">Email</button>
+            <button class="tab-btn" onclick="switchTab('categories')">Categories ({{ categories|length }})</button>
+            <button class="tab-btn" onclick="switchTab('locations')">Locations ({{ locations|length }})</button>
+            <button class="tab-btn" onclick="switchTab('vendors')">Vendors ({{ vendors|length }})</button>
+        </div>
 
-                <!-- Tab Contents -->
-                <div class="tab-content pt-3" id="settingsTabContent">
-                    <!-- General Settings -->
-                    <div class="tab-pane fade show active" id="general" role="tabpanel">
-                        <form method="POST" action="{{ url_for('settings.settings_view') }}">
-                            <div class="row g-3">
-                                <h4 class="h6 text-primary mt-3" style="font-family: var(--font-heading);">Company Information</h4>
-                                
-                                <div class="col-md-6 custom-form-group">
-                                    <label for="company_name" class="custom-form-label">Company Name</label>
-                                    <input type="text" class="custom-form-control" id="company_name" name="company_name" 
-                                           value="{{ settings.get('company_name', 'AssetCorp') }}">
-                                </div>
-                                <div class="col-md-3 custom-form-group">
-                                    <label for="currency" class="custom-form-label">System Currency</label>
-                                    <select class="custom-form-control" id="currency" name="currency">
-                                        <option value="USD ($)" {% if settings.get('currency') == 'USD ($)' %}selected{% endif %}>USD ($)</option>
-                                        <option value="EUR (€)" {% if settings.get('currency') == 'EUR (€)' %}selected{% endif %}>EUR (€)</option>
-                                        <option value="GBP (£)" {% if settings.get('currency') == 'GBP (£)' %}selected{% endif %}>GBP (£)</option>
-                                        <option value="INR (₹)" {% if settings.get('currency') == 'INR (₹)' %}selected{% endif %}>INR (₹)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 custom-form-group">
-                                    <label for="timezone" class="custom-form-label">System Time Zone</label>
-                                    <select class="custom-form-control" id="timezone" name="timezone">
-                                        <option value="UTC" {% if settings.get('timezone') == 'UTC' %}selected{% endif %}>UTC</option>
-                                        <option value="EST" {% if settings.get('timezone') == 'EST' %}selected{% endif %}>EST (GMT-5)</option>
-                                        <option value="IST" {% if settings.get('timezone') == 'IST' %}selected{% endif %}>IST (GMT+5:30)</option>
-                                        <option value="PST" {% if settings.get('timezone') == 'PST' %}selected{% endif %}>PST (GMT-8)</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-12"><hr class="border-secondary my-2"></div>
-                                <h4 class="h6 text-primary" style="font-family: var(--font-heading);">Database Backups</h4>
-                                
-                                <div class="col-md-6 custom-form-group">
-                                    <label for="backup_frequency" class="custom-form-label">Backup Frequency</label>
-                                    <select class="custom-form-control" id="backup_frequency" name="backup_frequency">
-                                        <option value="Daily" {% if settings.get('backup_frequency') == 'Daily' %}selected{% endif %}>Daily</option>
-                                        <option value="Weekly" {% if settings.get('backup_frequency') == 'Weekly' %}selected{% endif %}>Weekly</option>
-                                        <option value="Monthly" {% if settings.get('backup_frequency') == 'Monthly' %}selected{% endif %}>Monthly</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 custom-form-group">
-                                    <label for="backup_retention" class="custom-form-label">Retention Period</label>
-                                    <select class="custom-form-control" id="backup_retention" name="backup_retention">
-                                        <option value="7 Days" {% if settings.get('backup_retention') == '7 Days' %}selected{% endif %}>7 Days</option>
-                                        <option value="30 Days" {% if settings.get('backup_retention') == '30 Days' %}selected{% endif %}>30 Days</option>
-                                        <option value="90 Days" {% if settings.get('backup_retention') == '90 Days' %}selected{% endif %}>90 Days</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-12 text-end mt-4">
-                                    <button type="submit" class="btn btn-premium"><i class="fa-solid fa-save"></i> Save Settings</button>
-                                </div>
-                            </div>
-                        </form>
+        <!-- General Settings -->
+        <div class="tab-content active" id="tab-general">
+            <form method="POST" action="{{ url_for('settings.settings_view') }}">
+                <h3 class="form-title"><i class="fa-solid fa-building"></i> Company Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" name="company_name" class="form-control" value="{{ settings.get('company_name', '') }}">
                     </div>
-
-                    <!-- Email Configuration -->
-                    <div class="tab-pane fade" id="email" role="tabpanel">
-                        <form method="POST" action="{{ url_for('settings.settings_view') }}">
-                            <div class="row g-3">
-                                <h4 class="h6 text-primary mt-3" style="font-family: var(--font-heading);">SMTP Configuration</h4>
-                                
-                                <div class="col-md-6 custom-form-group">
-                                    <label for="email_sender" class="custom-form-label">Sender Email Address</label>
-                                    <input type="email" class="custom-form-control" id="email_sender" name="email_sender" 
-                                           value="{{ settings.get('email_sender', 'alerts@company.com') }}">
-                                </div>
-                                <div class="col-md-4 custom-form-group">
-                                    <label for="email_smtp_server" class="custom-form-label">SMTP Server Host</label>
-                                    <input type="text" class="custom-form-control" id="email_smtp_server" name="email_smtp_server" 
-                                           value="{{ settings.get('email_smtp_server', 'smtp.mailtrap.io') }}">
-                                </div>
-                                <div class="col-md-2 custom-form-group">
-                                    <label for="email_smtp_port" class="custom-form-label">SMTP Port</label>
-                                    <input type="text" class="custom-form-control" id="email_smtp_port" name="email_smtp_port" 
-                                           value="{{ settings.get('email_smtp_port', '2525') }}">
-                                </div>
-
-                                <div class="col-12 text-end mt-4">
-                                    <button type="submit" class="btn btn-premium"><i class="fa-solid fa-save"></i> Save SMTP settings</button>
-                                </div>
-                            </div>
-                        </form>
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select name="currency" class="form-control">
+                            <option value="USD ($)" {% if settings.get('currency') == 'USD ($)' %}selected{% endif %}>USD ($)</option>
+                            <option value="EUR (€)" {% if settings.get('currency') == 'EUR (€)' %}selected{% endif %}>EUR (€)</option>
+                            <option value="GBP (£)" {% if settings.get('currency') == 'GBP (£)' %}selected{% endif %}>GBP (£)</option>
+                            <option value="INR (₹)" {% if settings.get('currency') == 'INR (₹)' %}selected{% endif %}>INR (₹)</option>
+                        </select>
                     </div>
-
-                    <!-- Categories Manager -->
-                    <div class="tab-pane fade" id="categories" role="tabpanel">
-                        <div class="row g-4">
-                            <!-- Existing list -->
-                            <div class="col-md-7">
-                                <div class="table-responsive">
-                                    <table class="table custom-table" style="font-size: 0.9rem;">
-                                        <thead>
-                                            <tr>
-                                                <th>Category Name</th>
-                                                <th>Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for cat in categories %}
-                                                <tr>
-                                                    <td class="fw-semibold text-info">{{ cat.name }}</td>
-                                                    <td class="text-muted small">{{ cat.description or '-' }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <!-- Form panel -->
-                            <div class="col-md-5 border-start border-secondary ps-4">
-                                <h5 class="h6 mb-3 text-light" style="font-family: var(--font-heading);">Create Category</h5>
-                                <form method="POST" action="{{ url_for('settings.add_category') }}">
-                                    <div class="custom-form-group">
-                                        <label for="cat_name" class="custom-form-label">Category Name *</label>
-                                        <input type="text" class="custom-form-control" id="cat_name" name="name" required placeholder="e.g. Server Cabinets">
-                                    </div>
-                                    <div class="custom-form-group">
-                                        <label for="cat_desc" class="custom-form-label">Description</label>
-                                        <textarea class="custom-form-control" id="cat_desc" name="description" rows="3" placeholder="Category brief..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-premium w-100 justify-content-center"><i class="fa-solid fa-plus"></i> Save Category</button>
-                                </form>
-                            </div>
-                        </div>
+                </div>
+                <div class="form-group">
+                    <label>Timezone</label>
+                    <select name="timezone" class="form-control">
+                        <option value="UTC" {% if settings.get('timezone') == 'UTC' %}selected{% endif %}>UTC</option>
+                        <option value="EST" {% if settings.get('timezone') == 'EST' %}selected{% endif %}>EST (GMT-5)</option>
+                        <option value="IST" {% if settings.get('timezone') == 'IST' %}selected{% endif %}>IST (GMT+5:30)</option>
+                        <option value="PST" {% if settings.get('timezone') == 'PST' %}selected{% endif %}>PST (GMT-8)</option>
+                    </select>
+                </div>
+                <h3 class="form-title" style="margin-top: 20px;"><i class="fa-solid fa-database"></i> Backups</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Backup Frequency</label>
+                        <select name="backup_frequency" class="form-control">
+                            <option value="Daily" {% if settings.get('backup_frequency') == 'Daily' %}selected{% endif %}>Daily</option>
+                            <option value="Weekly" {% if settings.get('backup_frequency') == 'Weekly' %}selected{% endif %}>Weekly</option>
+                            <option value="Monthly" {% if settings.get('backup_frequency') == 'Monthly' %}selected{% endif %}>Monthly</option>
+                        </select>
                     </div>
-
-                    <!-- Locations Manager -->
-                    <div class="tab-pane fade" id="locations" role="tabpanel">
-                        <div class="row g-4">
-                            <!-- Existing list -->
-                            <div class="col-md-7">
-                                <div class="table-responsive">
-                                    <table class="table custom-table" style="font-size: 0.9rem;">
-                                        <thead>
-                                            <tr>
-                                                <th>Location Name</th>
-                                                <th>Description</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for loc in locations %}
-                                                <tr>
-                                                    <td class="fw-semibold text-info">{{ loc.name }}</td>
-                                                    <td class="text-muted small">{{ loc.description or '-' }}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <!-- Form panel -->
-                            <div class="col-md-5 border-start border-secondary ps-4">
-                                <h5 class="h6 mb-3 text-light" style="font-family: var(--font-heading);">Create Location</h5>
-                                <form method="POST" action="{{ url_for('settings.add_location') }}">
-                                    <div class="custom-form-group">
-                                        <label for="loc_name" class="custom-form-label">Location Name *</label>
-                                        <input type="text" class="custom-form-control" id="loc_name" name="name" required placeholder="e.g. Branch Office (West)">
-                                    </div>
-                                    <div class="custom-form-group">
-                                        <label for="loc_desc" class="custom-form-label">Description</label>
-                                        <textarea class="custom-form-control" id="loc_desc" name="description" rows="3" placeholder="Address or office details..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-premium w-100 justify-content-center"><i class="fa-solid fa-plus"></i> Save Location</button>
-                                </form>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label>Retention</label>
+                        <select name="backup_retention" class="form-control">
+                            <option value="7 Days" {% if settings.get('backup_retention') == '7 Days' %}selected{% endif %}>7 Days</option>
+                            <option value="30 Days" {% if settings.get('backup_retention') == '30 Days' %}selected{% endif %}>30 Days</option>
+                            <option value="90 Days" {% if settings.get('backup_retention') == '90 Days' %}selected{% endif %}>90 Days</option>
+                        </select>
                     </div>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn-submit"><i class="fa-solid fa-save"></i> Save Settings</button></div>
+            </form>
+        </div>
 
-                    <!-- Vendors Manager -->
-                    <div class="tab-pane fade" id="vendors" role="tabpanel">
-                        <div class="row g-4">
-                            <!-- Existing list -->
-                            <div class="col-md-7">
-                                <div class="table-responsive">
-                                    <table class="table custom-table" style="font-size: 0.85rem;">
-                                        <thead>
-                                            <tr>
-                                                <th>Vendor Name</th>
-                                                <th>Contact</th>
-                                                <th>Details</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for ven in vendors %}
-                                                <tr>
-                                                    <td>
-                                                        <div class="fw-semibold text-info">{{ ven.name }}</div>
-                                                        <div class="text-muted small">{{ ven.address or '' }}</div>
-                                                    </td>
-                                                    <td>
-                                                        {% if ven.contact_person %}<div>{{ ven.contact_person }}</div>{% endif %}
-                                                        {% if ven.phone %}<div class="text-muted">{{ ven.phone }}</div>{% endif %}
-                                                    </td>
-                                                    <td>
-                                                        {% if ven.email %}<div><i class="fa-solid fa-envelope text-muted me-1"></i> {{ ven.email }}</div>{% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <!-- Form panel -->
-                            <div class="col-md-5 border-start border-secondary ps-4">
-                                <h5 class="h6 mb-3 text-light" style="font-family: var(--font-heading);">Create Vendor</h5>
-                                <form method="POST" action="{{ url_for('settings.add_vendor') }}">
-                                    <div class="custom-form-group">
-                                        <label for="ven_name" class="custom-form-label">Vendor Name *</label>
-                                        <input type="text" class="custom-form-control" id="ven_name" name="name" required placeholder="e.g. Dell Enterprise">
-                                    </div>
-                                    <div class="custom-form-group">
-                                        <label for="ven_contact" class="custom-form-label">Contact Person</label>
-                                        <input type="text" class="custom-form-control" id="ven_contact" name="contact_person" placeholder="e.g. Alice Johnson">
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 custom-form-group">
-                                            <label for="ven_email" class="custom-form-label">Email</label>
-                                            <input type="email" class="custom-form-control" id="ven_email" name="email" placeholder="sales@dell.com">
-                                        </div>
-                                        <div class="col-md-6 custom-form-group">
-                                            <label for="ven_phone" class="custom-form-label">Phone</label>
-                                            <input type="text" class="custom-form-control" id="ven_phone" name="phone" placeholder="+1-555-0155">
-                                        </div>
-                                    </div>
-                                    <div class="custom-form-group">
-                                        <label for="ven_address" class="custom-form-label">Address</label>
-                                        <textarea class="custom-form-control" id="ven_address" name="address" rows="2" placeholder="Vendor physical address..."></textarea>
-                                    </div>
-                                    <button type="submit" class="btn btn-premium w-100 justify-content-center"><i class="fa-solid fa-plus"></i> Save Vendor</button>
-                                </form>
-                            </div>
-                        </div>
+        <!-- Email Settings -->
+        <div class="tab-content" id="tab-email">
+            <form method="POST" action="{{ url_for('settings.settings_view') }}">
+                <h3 class="form-title"><i class="fa-solid fa-envelope"></i> SMTP Configuration</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sender Email</label>
+                        <input type="email" name="email_sender" class="form-control" value="{{ settings.get('email_sender', '') }}">
                     </div>
+                    <div class="form-group">
+                        <label>SMTP Server</label>
+                        <input type="text" name="email_smtp_server" class="form-control" value="{{ settings.get('email_smtp_server', '') }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="text" name="email_smtp_port" class="form-control" value="{{ settings.get('email_smtp_port', '') }}">
+                    </div>
+                </div>
+                <div class="form-actions"><button type="submit" class="btn-submit"><i class="fa-solid fa-save"></i> Save Email</button></div>
+            </form>
+        </div>
+
+        <!-- Categories -->
+        <div class="tab-content" id="tab-categories">
+            <div class="form-row">
+                <div style="flex: 2;">
+                    <table class="data-table">
+                        <thead><tr><th>Name</th><th>Description</th></tr></thead>
+                        <tbody>
+                            {% for cat in categories %}
+                                <tr><td>{{ cat.name }}</td><td class="text-muted">{{ cat.description or '-' }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="flex: 1;">
+                    <form method="POST" action="{{ url_for('settings.add_category') }}">
+                        <h3 class="form-title">Add Category</h3>
+                        <div class="form-group"><label>Name *</label><input type="text" name="name" class="form-control" required></div>
+                        <div class="form-group"><label>Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                        <button type="submit" class="btn-submit"><i class="fa-solid fa-plus"></i> Add</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Locations -->
+        <div class="tab-content" id="tab-locations">
+            <div class="form-row">
+                <div style="flex: 2;">
+                    <table class="data-table">
+                        <thead><tr><th>Name</th><th>Description</th></tr></thead>
+                        <tbody>
+                            {% for loc in locations %}
+                                <tr><td>{{ loc.name }}</td><td class="text-muted">{{ loc.description or '-' }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="flex: 1;">
+                    <form method="POST" action="{{ url_for('settings.add_location') }}">
+                        <h3 class="form-title">Add Location</h3>
+                        <div class="form-group"><label>Name *</label><input type="text" name="name" class="form-control" required></div>
+                        <div class="form-group"><label>Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
+                        <button type="submit" class="btn-submit"><i class="fa-solid fa-plus"></i> Add</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendors -->
+        <div class="tab-content" id="tab-vendors">
+            <div class="form-row">
+                <div style="flex: 2;">
+                    <table class="data-table">
+                        <thead><tr><th>Name</th><th>Contact</th><th>Email</th></tr></thead>
+                        <tbody>
+                            {% for ven in vendors %}
+                                <tr><td>{{ ven.name }}</td><td>{{ ven.contact_person or '-' }}</td><td class="text-muted">{{ ven.email or '-' }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="flex: 1;">
+                    <form method="POST" action="{{ url_for('settings.add_vendor') }}">
+                        <h3 class="form-title">Add Vendor</h3>
+                        <div class="form-group"><label>Name *</label><input type="text" name="name" class="form-control" required></div>
+                        <div class="form-group"><label>Contact</label><input type="text" name="contact_person" class="form-control"></div>
+                        <div class="form-group"><label>Email</label><input type="email" name="email" class="form-control"></div>
+                        <div class="form-group"><label>Phone</label><input type="text" name="phone" class="form-control"></div>
+                        <div class="form-group"><label>Address</label><textarea name="address" class="form-control" rows="2"></textarea></div>
+                        <button type="submit" class="btn-submit"><i class="fa-solid fa-plus"></i> Add</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
 {% endblock %}

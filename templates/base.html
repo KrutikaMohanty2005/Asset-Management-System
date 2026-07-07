@@ -116,13 +116,18 @@
                 <button class="topbar-icon-btn" title="QR Scanner">
                     <i class="fa-solid fa-qrcode"></i>
                 </button>
-                <div class="user-menu">
+                <div class="user-menu" onclick="toggleUserDropdown()">
                     <div class="user-avatar">
                         <i class="fa-solid fa-user"></i>
                     </div>
                     <div class="user-info">
                         <span class="user-name">{{ session.get('username', 'User')|capitalize }}</span>
                         <span class="user-role">{{ session.get('role', '')|capitalize }}</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: #94A3B8; margin-left: 4px;"></i>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="{{ url_for('settings.settings_view') }}"><i class="fa-solid fa-gear"></i> Settings</a>
+                        <a href="{{ url_for('auth.logout') }}" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
                     </div>
                 </div>
             </div>
@@ -159,6 +164,21 @@
                     setTimeout(function() { el.remove(); }, 300);
                 });
             }, 4000);
+        });
+
+        // User dropdown toggle
+        function toggleUserDropdown() {
+            var dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            var menu = document.querySelector('.user-menu');
+            var dropdown = document.getElementById('userDropdown');
+            if (dropdown && !menu.contains(e.target)) {
+                dropdown.classList.remove('show');
+            }
         });
     </script>
     {% block scripts %}{% endblock %}

@@ -280,6 +280,7 @@ body {
     padding: 6px 12px;
     border-radius: var(--radius-md);
     cursor: pointer;
+    position: relative;
 }
 
 .user-avatar {
@@ -308,6 +309,48 @@ body {
 .user-role {
     font-size: 11px;
     color: var(--text-muted);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    min-width: 180px;
+    display: none;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.user-dropdown.show {
+    display: block;
+}
+
+.user-dropdown a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.user-dropdown a:hover {
+    background: var(--content-bg);
+}
+
+.user-dropdown a.logout-link {
+    color: var(--danger);
+    border-top: 1px solid var(--border-color);
+}
+
+.user-dropdown a.logout-link:hover {
+    background: #FEF2F2;
 }
 
 /* Content Area */

@@ -52,11 +52,9 @@ def create_app():
     # Register Error Handlers
     register_error_handlers(app)
     
-    # Global root redirect helper
+    # Global root redirect helper - always show login first
     @app.route('/')
     def index():
-        if 'user_id' in session:
-            return redirect(url_for('dashboard.view_dashboard'))
         return redirect(url_for('auth.login'))
 
     return app

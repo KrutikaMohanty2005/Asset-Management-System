@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Vendors - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Vendors</h1>
+            <p class="page-subtitle">Manage your vendor and supplier contacts</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-truck"></i> All Vendors</h2>
+                <span class="count-badge">{{ vendors|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vendor Name</th>
+                            <th>Contact Person</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vendor in vendors %}
+                            <tr>
+                                <td class="fw-semibold">{{ vendor.name }}</td>
+                                <td>{{ vendor.contact_person or '-' }}</td>
+                                <td>{{ vendor.email or '-' }}</td>
+                                <td>{{ vendor.phone or '-' }}</td>
+                                <td class="action-cell">
+                                    <a href="{{ url_for('vendors.edit_vendor', id=vendor.id) }}" class="action-btn edit-btn" title="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    {% if session.get('role') in ['admin', 'manager'] %}
+                                        <form method="POST" action="{{ url_for('vendors.delete_vendor', id=vendor.id) }}" style="display:inline;" onsubmit="return confirm('Delete this vendor?');">
+                                            <button type="submit" class="action-btn delete-btn" title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h2 class="form-title">
+                {% if edit_vendor %}
+                    <i class="fa-solid fa-pen"></i> Edit Vendor
+                {% else %}
+                    <i class="fa-solid fa-plus"></i> Add Vendor
+                {% endif %}
+            </h2>
+            <form method="POST" action="{% if edit_vendor %}{{ url_for('vendors.edit_vendor', id=edit_vendor.id) }}{% else %}{{ url_for('vendors.list_vendors') }}{% endif %}">
+                <div class="form-group">
+                    <label>Vendor Name *</label>
+                    <input type="text" name="name" class="form-control" value="{{ edit_vendor.name if edit_vendor else '' }}" required placeholder="e.g. Dell Enterprise">
+                </div>
+                <div class="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" class="form-control" value="{{ edit_vendor.contact_person if edit_vendor else '' }}" placeholder="e.g. John Smith">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ edit_vendor.email if edit_vendor else '' }}" placeholder="vendor@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ edit_vendor.phone if edit_vendor else '' }}" placeholder="+1-555-0100">
+                </div>
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" class="form-control" rows="2" placeholder="Vendor address...">{{ edit_vendor.address if edit_vendor else '' }}</textarea>
+                </div>
+                <div class="form-actions">
+                    {% if edit_vendor %}
+                        <a href="{{ url_for('vendors.list_vendors') }}" class="btn-cancel">Cancel</a>
+                    {% endif %}
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-save"></i> Save Vendor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Categories</h1>
+            <p class="page-subtitle">Manage asset categories and classification</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-layer-group"></i> All Categories</h2>
+                <span class="count-badge">{{ categories|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Category Name</th>
+                            <th>Description</th>
+                            <th>Assets</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categories %}
+                            <tr>
+                                <td class="fw-semibold">{{ cat.name }}</td>
+                                <td class="text-muted">{{ cat.description or '-' }}</td>
+                                <td><span class="count-badge">{{ cat.assets|length }}</span></td>
+                                <td class="action-cell">
+                                    <a href="{{ url_for('categories.edit_category', id=cat.id) }}" class="action-btn edit-btn" title="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    {% if session.get('role') in ['admin', 'manager'] %}
+                                        <form method="POST" action="{{ url_for('categories.delete_category', id=cat.id) }}" style="display:inline;" onsubmit="return confirm('Delete this category?');">
+                                            <button type="submit" class="action-btn delete-btn" title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h2 class="form-title">
+                {% if edit_category %}
+                    <i class="fa-solid fa-pen"></i> Edit Category
+                {% else %}
+                    <i class="fa-solid fa-plus"></i> Add Category
+                {% endif %}
+            </h2>
+            <form method="POST" action="{% if edit_category %}{{ url_for('categories.edit_category', id=edit_category.id) }}{% else %}{{ url_for('categories.list_categories') }}{% endif %}">
+                <div class="form-group">
+                    <label>Category Name *</label>
+                    <input type="text" name="name" class="form-control" value="{{ edit_category.name if edit_category else '' }}" required placeholder="e.g. Laptops">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Brief description...">{{ edit_category.description if edit_category else '' }}</textarea>
+                </div>
+                <div class="form-actions">
+                    {% if edit_category %}
+                        <a href="{{ url_for('categories.list_categories') }}" class="btn-cancel">Cancel</a>
+                    {% endif %}
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-save"></i> Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

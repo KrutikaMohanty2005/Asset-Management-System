@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Return Assets - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Return Assets</h1>
+            <p class="page-subtitle">Check-in and return assigned assets</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-rotate-left"></i> Currently Assigned Assets</h2>
+                <span class="count-badge">{{ assigned_assets|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Asset ID</th>
+                            <th>Asset Name</th>
+                            <th>Category</th>
+                            <th>Assigned To</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in assigned_assets %}
+                            <tr>
+                                <td class="asset-id">{{ asset.asset_id }}</td>
+                                <td>{{ asset.name }}</td>
+                                <td>{{ asset.category.name }}</td>
+                                <td>{{ asset.assigned_employee.name if asset.assigned_employee else '-' }}</td>
+                                <td class="action-cell">
+                                    <form method="POST" action="{{ url_for('return_assets.list_returns') }}" style="display:inline;" onsubmit="return confirm('Confirm return of this asset?');">
+                                        <input type="hidden" name="asset_id" value="{{ asset.id }}">
+                                        <button type="submit" class="btn-return">
+                                            <i class="fa-solid fa-rotate-left"></i> Return
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Returns</h2>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Asset ID</th>
+                            <th>Asset Name</th>
+                            <th>Returned By</th>
+                            <th>Return Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ret in recent_returns %}
+                            <tr>
+                                <td class="asset-id">{{ ret.asset.asset_id }}</td>
+                                <td>{{ ret.asset.name }}</td>
+                                <td>{{ ret.employee.name }}</td>
+                                <td>{{ ret.returned_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

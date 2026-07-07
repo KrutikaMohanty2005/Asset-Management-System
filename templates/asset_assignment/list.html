@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Asset Assignment - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Asset Assignment</h1>
+            <p class="page-subtitle">Assign available assets to employees</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-user-plus"></i> Assignment History</h2>
+                <span class="count-badge">{{ assignments|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Asset ID</th>
+                            <th>Asset Name</th>
+                            <th>Employee</th>
+                            <th>Assigned Date</th>
+                            <th>Returned</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ass in assignments %}
+                            <tr>
+                                <td class="asset-id">{{ ass.asset.asset_id }}</td>
+                                <td>{{ ass.asset.name }}</td>
+                                <td>{{ ass.employee.name }}</td>
+                                <td>{{ ass.assigned_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ ass.returned_date.strftime('%Y-%m-%d %H:%M') if ass.returned_date else '-' }}</td>
+                                <td>
+                                    {% if ass.returned_date %}
+                                        <span class="status-badge available">Returned</span>
+                                    {% else %}
+                                        <span class="status-badge assigned">Active</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h2 class="form-title"><i class="fa-solid fa-plus"></i> New Assignment</h2>
+            <form method="POST" action="{{ url_for('asset_assignment.list_assignments') }}">
+                <div class="form-group">
+                    <label>Select Asset *</label>
+                    <select name="asset_id" class="form-control" required>
+                        <option value="" disabled selected>Choose an available asset</option>
+                        {% for asset in available_assets %}
+                            <option value="{{ asset.id }}">{{ asset.asset_id }} - {{ asset.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assign To Employee *</label>
+                    <select name="employee_id" class="form-control" required>
+                        <option value="" disabled selected>Choose an employee</option>
+                        {% for emp in active_employees %}
+                            <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.employee_id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Assignment notes..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-check"></i> Assign Asset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

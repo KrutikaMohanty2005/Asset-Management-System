@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Welcome back, {{ session.get('username', 'User')|capitalize }}!</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('assets.add_asset') }}" class="btn-action btn-primary-action">
+                <i class="fa-solid fa-plus"></i> Add Asset
+            </a>
+            <a href="{{ url_for('qr.scanner_view') }}" class="btn-action btn-outline-action">
+                <i class="fa-solid fa-qrcode"></i> Scan QR Code
+            </a>
+            <a href="{{ url_for('reports.reports_view') }}" class="btn-action btn-outline-action">
+                <i class="fa-solid fa-file-lines"></i> Generate Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="fa-solid fa-desktop"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Assets</h3>
+                <div class="stat-number">{{ total_assets }}</div>
+                <a href="{{ url_for('assets.list_assets') }}" class="stat-link">View all assets &rarr;</a>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="fa-solid fa-square-check"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Assigned Assets</h3>
+                <div class="stat-number">{{ assigned_assets }}</div>
+                <span class="stat-percentage green">{{ assigned_pct }}% of total</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon yellow">
+                <i class="fa-solid fa-box-open"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Available Assets</h3>
+                <div class="stat-number">{{ available_assets }}</div>
+                <span class="stat-percentage yellow">{{ available_pct }}% of total</span>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <i class="fa-solid fa-wrench"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-label">Under Maintenance</h3>
+                <div class="stat-number">{{ maintenance_assets }}</div>
+                <span class="stat-percentage orange">{{ maintenance_pct }}% of total</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Activity Row -->
+    <div class="charts-row">
+        <!-- Assets by Category -->
+        <div class="chart-card">
+            <h2 class="chart-title">Assets by Category</h2>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="activity-card">
+            <h2 class="chart-title">Recent Activity</h2>
+            <div class="activity-list">
+                {% if activities %}
+                    {% for act in activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: {{ act.color }}20; color: {{ act.color }};">
+                                <i class="fa-solid {{ act.icon }}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p class="activity-text">{{ act.title }}</p>
+                                <span class="activity-time">{{ act.detail }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <p>No recent activities</p>
+                    </div>
+                {% endif %}
+            </div>
+            <a href="#" class="view-all-link">View all activity &rarr;</a>
+        </div>
+
+        <!-- Assets by Status -->
+        <div class="chart-card">
+            <h2 class="chart-title">Assets by Status</h2>
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Assets Table -->
+    <div class="table-card">
+        <div class="table-header">
+            <h2 class="table-title">Recent Assets</h2>
+            <a href="{{ url_for('assets.list_assets') }}" class="view-all-link">View all assets &rarr;</a>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Asset ID</th>
+                        <th>Asset Name</th>
+                        <th>Category</th>
+                        <th>Serial Number</th>
+                        <th>Status</th>
+                        <th>Assigned To</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asset in recent_assets %}
+                        <tr>
+                            <td class="asset-id">{{ asset.asset_id }}</td>
+                            <td>{{ asset.name }}</td>
+                            <td>{{ asset.category.name }}</td>
+                            <td>{{ asset.serial_number or '-' }}</td>
+                            <td>
+                                <span class="status-badge {{ asset.status.lower() }}">{{ asset.status }}</span>
+                            </td>
+                            <td>{{ asset.assigned_employee.name if asset.assigned_employee else '-' }}</td>
+                            <td class="action-cell">
+                                <a href="{{ url_for('assets.edit_asset', id=asset.id) }}" class="action-btn edit-btn" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <a href="{{ url_for('qr.scan_result', asset_id=asset.asset_id) }}" class="action-btn qr-btn" title="QR Code">
+                                    <i class="fa-solid fa-qrcode"></i>
+                                </a>
+                                {% if session.get('role') in ['admin', 'manager'] %}
+                                    <form method="POST" action="{{ url_for('assets.delete_asset', id=asset.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure?');">
+                                        <button type="submit" class="action-btn delete-btn" title="Delete">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch chart data
+    fetch('/api/dashboard/chart-data')
+        .then(response => response.json())
+        .then(data => {
+            // Category Doughnut Chart
+            const catCtx = document.getElementById('categoryChart').getContext('2d');
+            new Chart(catCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.categories.labels,
+                    datasets: [{
+                        data: data.categories.counts,
+                        backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: { size: 12, family: 'Inter' }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Status Doughnut Chart
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.status.labels,
+                    datasets: [{
+                        data: data.status.counts,
+                        backgroundColor: ['#3B82F6', '#22C55E', '#F59E0B'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                font: { size: 12, family: 'Inter' }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}

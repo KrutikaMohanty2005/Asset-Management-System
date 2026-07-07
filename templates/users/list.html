@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Users - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Users</h1>
+            <p class="page-subtitle">Manage system user accounts and roles</p>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <div class="table-card">
+            <div class="table-header">
+                <h2 class="table-title"><i class="fa-solid fa-user-shield"></i> System Users</h2>
+                <span class="count-badge">{{ users|length }}</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td class="fw-semibold">{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="status-badge {% if user.role == 'admin' %}assigned{% elif user.role == 'manager' %}maintenance{% else %}available{% endif %}">
+                                        {{ user.role|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="action-cell">
+                                    <a href="{{ url_for('users.edit_user', id=user.id) }}" class="action-btn edit-btn" title="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    {% if user.username != 'admin' %}
+                                        <form method="POST" action="{{ url_for('users.delete_user', id=user.id) }}" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                                            <button type="submit" class="action-btn delete-btn" title="Delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h2 class="form-title">
+                {% if edit_user %}
+                    <i class="fa-solid fa-pen"></i> Edit User
+                {% else %}
+                    <i class="fa-solid fa-plus"></i> Add User
+                {% endif %}
+            </h2>
+            <form method="POST" action="{% if edit_user %}{{ url_for('users.edit_user', id=edit_user.id) }}{% else %}{{ url_for('users.list_users') }}{% endif %}">
+                {% if not edit_user %}
+                    <div class="form-group">
+                        <label>Username *</label>
+                        <input type="text" name="username" class="form-control" required placeholder="e.g. john_doe">
+                    </div>
+                {% endif %}
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" class="form-control" value="{{ edit_user.email if edit_user else '' }}" required placeholder="user@company.com">
+                </div>
+                <div class="form-group">
+                    <label>Password {% if edit_user %}(leave blank to keep current){% else %}*{% endif %}</label>
+                    <input type="password" name="password" class="form-control" {% if not edit_user %}required{% endif %} placeholder="Enter password">
+                </div>
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select name="role" class="form-control" required>
+                        <option value="staff" {% if edit_user and edit_user.role == 'staff' %}selected{% endif %}>Staff</option>
+                        <option value="manager" {% if edit_user and edit_user.role == 'manager' %}selected{% endif %}>Manager</option>
+                        <option value="admin" {% if edit_user and edit_user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    {% if edit_user %}
+                        <a href="{{ url_for('users.list_users') }}" class="btn-cancel">Cancel</a>
+                    {% endif %}
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-save"></i> Save User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Result: {{ asset.asset_id }} - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 animate-fade-in">
+    <!-- Header -->
+    <div class="mb-4 text-center">
+        <a href="{{ url_for('qr.scanner_view') }}" class="btn btn-sm btn-secondary-premium mb-3">
+            <i class="fa-solid fa-qrcode"></i> Back to Scanner
+        </a>
+        <h1 class="h2 mb-1" style="font-family: var(--font-heading);">Scan Result</h1>
+        <p class="text-muted mb-0">Live lookups and field operations for asset ID: <span class="font-monospace text-info fw-bold">{{ asset.asset_id }}</span></p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <!-- Asset Snapshot Card -->
+            <div class="glass-panel p-4 mb-4">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; background: var(--accent-gradient) !important; box-shadow: 0 4px 15px var(--accent-glow);">
+                        <i class="fa-solid fa-tablet-screen-button" style="font-size: 1.6rem;"></i>
+                    </div>
+                    <div>
+                        <h4 class="mb-0" style="font-family: var(--font-heading);">{{ asset.name }}</h4>
+                        <span class="small text-muted font-monospace">{{ asset.brand_model or 'No model specs' }}</span>
+                    </div>
+                    <div class="ms-auto">
+                        <span class="status-badge {{ asset.status.lower() }}">
+                            {{ asset.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-3" style="font-size: 0.95rem;">
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Category</span>
+                        <span class="fw-semibold">{{ asset.category.name }}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Location</span>
+                        <span class="fw-semibold"><i class="fa-solid fa-location-dot text-muted me-1"></i> {{ asset.location.name }}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Serial Number</span>
+                        <span class="fw-semibold font-monospace">{{ asset.serial_number or '-' }}</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted small d-block">Current Owner</span>
+                        <span class="fw-semibold">
+                            {% if asset.status == 'Assigned' and asset.assigned_employee %}
+                                <i class="fa-solid fa-user text-muted me-1"></i> {{ asset.assigned_employee.name }}
+                            {% else %}
+                                <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Field Quick Actions Panel -->
+            <div class="glass-panel p-4">
+                <h3 class="h5 mb-4 text-primary" style="font-family: var(--font-heading);"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> Field Actions</h3>
+                
+                {% if asset.status == 'Available' %}
+                    <!-- Assign Form -->
+                    <h5 class="h6 text-light mb-3" style="font-family: var(--font-heading);"><i class="fa-solid fa-user-plus text-info me-1"></i> Assign to Employee</h5>
+                    <form method="POST" action="{{ url_for('qr.scan_result_action') }}" class="mb-4 pb-4 border-bottom border-secondary">
+                        <input type="hidden" name="asset_id" value="{{ asset.asset_id }}">
+                        <input type="hidden" name="action" value="assign">
+                        
+                        <div class="custom-form-group">
+                            <select class="custom-form-control" name="assigned_employee_id" required>
+                                <option value="" disabled selected>Select active employee</option>
+                                {% for emp in employees %}
+                                    <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.employee_id }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-premium w-100 justify-content-center">
+                            <i class="fa-solid fa-user-check"></i> Assign Asset
+                        </button>
+                    </form>
+
+                    <!-- Send to Maintenance Form -->
+                    <h5 class="h6 text-light mb-3" style="font-family: var(--font-heading);"><i class="fa-solid fa-screwdriver-wrench text-warning me-1"></i> Send to Maintenance</h5>
+                    <form method="POST" action="{{ url_for('qr.scan_result_action') }}">
+                        <input type="hidden" name="asset_id" value="{{ asset.asset_id }}">
+                        <input type="hidden" name="action" value="maintenance">
+                        
+                        <div class="custom-form-group">
+                            <textarea class="custom-form-control" name="remarks" rows="2" placeholder="Briefly specify issues/servicing details..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-secondary-premium text-warning w-100 justify-content-center">
+                            <i class="fa-solid fa-paper-plane"></i> Send to Maintenance
+                        </button>
+                    </form>
+
+                {% elif asset.status == 'Assigned' %}
+                    <!-- Return Check-in Action -->
+                    <div class="mb-4 pb-4 border-bottom border-secondary">
+                        <h5 class="h6 text-light mb-3" style="font-family: var(--font-heading);"><i class="fa-solid fa-arrow-rotate-left text-success me-1"></i> Check-in / Return Asset</h5>
+                        <form method="POST" action="{{ url_for('qr.scan_result_action') }}">
+                            <input type="hidden" name="asset_id" value="{{ asset.asset_id }}">
+                            <input type="hidden" name="action" value="return">
+                            <button type="submit" class="btn btn-premium w-100 justify-content-center" onclick="return confirm('Confirm check-in / return of this asset?');">
+                                <i class="fa-solid fa-right-to-bracket"></i> Return Asset to Inventory
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Send to Maintenance Form -->
+                    <h5 class="h6 text-light mb-3" style="font-family: var(--font-heading);"><i class="fa-solid fa-screwdriver-wrench text-warning me-1"></i> Send to Maintenance</h5>
+                    <form method="POST" action="{{ url_for('qr.scan_result_action') }}">
+                        <input type="hidden" name="asset_id" value="{{ asset.asset_id }}">
+                        <input type="hidden" name="action" value="maintenance">
+                        
+                        <div class="custom-form-group">
+                            <textarea class="custom-form-control" name="remarks" rows="2" placeholder="Specify issues. Active assignment will end automatically..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-secondary-premium text-warning w-100 justify-content-center">
+                            <i class="fa-solid fa-paper-plane"></i> Send to Maintenance
+                        </button>
+                    </form>
+
+                {% elif asset.status == 'Maintenance' %}
+                    <div class="text-center py-3">
+                        <i class="fa-solid fa-screwdriver-wrench text-warning mb-3" style="font-size: 2.5rem; opacity: 0.8;"></i>
+                        <h6 class="text-light">Asset Under Active Maintenance</h6>
+                        <p class="small text-muted mb-3">Servicing operations must be closed through the Maintenance Logs panel.</p>
+                        <a href="{{ url_for('maintenance.list_logs') }}" class="btn btn-secondary-premium">
+                            <i class="fa-solid fa-list-check"></i> Go to Maintenance Logs
+                        </a>
+                    </div>
+
+                {% elif asset.status == 'Retired' %}
+                    <div class="text-center py-3">
+                        <i class="fa-solid fa-circle-minus text-danger mb-3" style="font-size: 2.5rem; opacity: 0.8;"></i>
+                        <h6 class="text-light">Asset is Retired</h6>
+                        <p class="small text-muted mb-0">Retired assets are locked from further deployments or servicing.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

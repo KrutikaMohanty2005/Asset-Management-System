@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}{% if asset %}Edit Asset - {{ asset.name }}{% else %}Add New Asset{% endif %} - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <a href="{{ url_for('assets.list_assets') }}" class="btn btn-sm btn-secondary-premium mb-3">
+            <i class="fa-solid fa-arrow-left"></i> Back to Inventory
+        </a>
+        <h1 class="h2 mb-1" style="font-family: var(--font-heading);">
+            {% if asset %}Edit Asset: {{ asset.name }}{% else %}Add New Asset{% endif %}
+        </h1>
+        <p class="text-muted mb-0">{% if asset %}Update details for asset ID: {{ asset.asset_id }}{% else %}Register a new physical or software asset in the catalog{% endif %}</p>
+    </div>
+
+    <!-- Main Form Panel -->
+    <form method="POST" enctype="multipart/form-data" class="row g-4">
+        <!-- General Information Card -->
+        <div class="col-12 col-lg-8">
+            <div class="glass-panel p-4 h-100">
+                <h3 class="h5 mb-4 text-primary" style="font-family: var(--font-heading);"><i class="fa-solid fa-circle-info me-2"></i> General Information</h3>
+                
+                <div class="row">
+                    <!-- Asset ID -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="asset_id" class="custom-form-label">Asset ID *</label>
+                        <input type="text" class="custom-form-control font-monospace text-info fw-bold" id="asset_id" name="asset_id" 
+                               value="{% if asset %}{{ asset.asset_id }}{% else %}{{ suggested_id }}{% endif %}" 
+                               {% if asset %}readonly style="opacity: 0.7;"{% endif %} required>
+                        <div class="form-text text-muted">Unique identifier for system inventory tracking.</div>
+                    </div>
+                    
+                    <!-- Asset Name -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="name" class="custom-form-label">Asset Name *</label>
+                        <input type="text" class="custom-form-control" id="name" name="name" 
+                               value="{% if asset %}{{ asset.name }}{% endif %}" placeholder="e.g. Macbook Pro M3" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Category -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="category_id" class="custom-form-label">Category *</label>
+                        <select class="custom-form-control" id="category_id" name="category_id" required>
+                            <option value="" disabled {% if not asset %}selected{% endif %}>Select Category</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if asset and asset.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Location -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="location_id" class="custom-form-label">Location *</label>
+                        <select class="custom-form-control" id="location_id" name="location_id" required>
+                            <option value="" disabled {% if not asset %}selected{% endif %}>Select Location</option>
+                            {% for loc in locations %}
+                                <option value="{{ loc.id }}" {% if asset and asset.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Brand & Model -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="brand_model" class="custom-form-label">Brand & Model</label>
+                        <input type="text" class="custom-form-control" id="brand_model" name="brand_model" 
+                               value="{% if asset %}{{ asset.brand_model or '' }}{% endif %}" placeholder="e.g. Apple Macbook Pro 16-inch">
+                    </div>
+                    
+                    <!-- Serial Number -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="serial_number" class="custom-form-label">Serial Number</label>
+                        <input type="text" class="custom-form-control" id="serial_number" name="serial_number" 
+                               value="{% if asset %}{{ asset.serial_number or '' }}{% endif %}" placeholder="e.g. C02XG8ZNJG5H">
+                    </div>
+                </div>
+
+                <h3 class="h5 my-4 text-primary" style="font-family: var(--font-heading);"><i class="fa-solid fa-receipt me-2"></i> Acquisition & Warranty</h3>
+                
+                <div class="row">
+                    <!-- Purchase Date -->
+                    <div class="col-md-4 custom-form-group">
+                        <label for="purchase_date" class="custom-form-label">Purchase Date</label>
+                        <input type="date" class="custom-form-control" id="purchase_date" name="purchase_date" 
+                               value="{% if asset and asset.purchase_date %}{{ asset.purchase_date.strftime('%Y-%m-%d') }}{% endif %}">
+                    </div>
+                    
+                    <!-- Purchase Cost -->
+                    <div class="col-md-4 custom-form-group">
+                        <label for="purchase_cost" class="custom-form-label">Purchase Cost</label>
+                        <div class="position-relative">
+                            <span class="position-absolute" style="left: 16px; top: 12px; color: var(--text-muted);">$</span>
+                            <input type="number" step="0.01" min="0" class="custom-form-control" style="padding-left: 32px;" 
+                                   id="purchase_cost" name="purchase_cost" 
+                                   value="{% if asset and asset.purchase_cost %}{{ asset.purchase_cost }}{% endif %}" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Warranty Expiry -->
+                    <div class="col-md-4 custom-form-group">
+                        <label for="warranty_expiry" class="custom-form-label">Warranty Expiry</label>
+                        <input type="date" class="custom-form-control" id="warranty_expiry" name="warranty_expiry" 
+                               value="{% if asset and asset.warranty_expiry %}{{ asset.warranty_expiry.strftime('%Y-%m-%d') }}{% endif %}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Vendor -->
+                    <div class="col-md-6 custom-form-group">
+                        <label for="vendor_id" class="custom-form-label">Vendor</label>
+                        <select class="custom-form-control" id="vendor_id" name="vendor_id">
+                            <option value="">Select Vendor (None)</option>
+                            {% for ven in vendors %}
+                                <option value="{{ ven.id }}" {% if asset and asset.vendor_id == ven.id %}selected{% endif %}>{{ ven.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment & Files Sidebar Form Column -->
+        <div class="col-12 col-lg-4">
+            <div class="d-flex flex-column gap-4 h-100">
+                <!-- Status & Assignment Card -->
+                <div class="glass-panel p-4">
+                    <h3 class="h5 mb-4 text-primary" style="font-family: var(--font-heading);"><i class="fa-solid fa-user-check me-2"></i> Assignment Status</h3>
+                    
+                    <!-- Asset Status -->
+                    <div class="custom-form-group">
+                        <label for="status" class="custom-form-label">Status *</label>
+                        <select class="custom-form-control" id="status" name="status" required>
+                            <option value="Available" {% if asset and asset.status == 'Available' %}selected{% elif not asset %}selected{% endif %}>Available</option>
+                            <option value="Assigned" {% if asset and asset.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+                            <option value="Maintenance" {% if asset and asset.status == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                            <option value="Retired" {% if asset and asset.status == 'Retired' %}selected{% endif %}>Retired</option>
+                        </select>
+                    </div>
+
+                    <!-- Assigned Employee -->
+                    <div class="custom-form-group" id="employee_assignment_container" style="display: none;">
+                        <label for="assigned_employee_id" class="custom-form-label">Assign To Employee *</label>
+                        <select class="custom-form-control" id="assigned_employee_id" name="assigned_employee_id">
+                            <option value="" disabled {% if not asset or not asset.assigned_employee_id %}selected{% endif %}>Select Employee</option>
+                            {% for emp in employees %}
+                                <option value="{{ emp.id }}" {% if asset and asset.assigned_employee_id == emp.id %}selected{% endif %}>{{ emp.name }} ({{ emp.employee_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Optional Notes for Log -->
+                    {% if asset %}
+                    <div class="custom-form-group" id="assignment_notes_container" style="display: none;">
+                        <label for="notes" class="custom-form-label">Assignment Log Notes</label>
+                        <textarea class="custom-form-control" id="notes" name="notes" rows="2" placeholder="e.g. Issued for Q3 remote projects."></textarea>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Document Uploads Card -->
+                <div class="glass-panel p-4">
+                    <h3 class="h5 mb-4 text-primary" style="font-family: var(--font-heading);"><i class="fa-solid fa-file-arrow-up me-2"></i> Upload Attachments</h3>
+                    
+                    <!-- Asset Image Upload -->
+                    <div class="custom-form-group">
+                        <label class="custom-form-label">Asset Photo</label>
+                        <div class="file-upload-wrapper" id="image-dropzone">
+                            <i class="fa-solid fa-image"></i>
+                            <p class="small text-muted mb-0">Drag and drop, or click to upload photo</p>
+                            <input type="file" class="file-upload-input d-none" id="image" name="image" accept="image/*">
+                        </div>
+                        {% if asset and asset.image_path %}
+                            <div class="mt-2 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-paperclip text-success"></i>
+                                <span class="small text-muted text-truncate" style="max-width: 250px;">{{ asset.image_path.split('/')[-1] }}</span>
+                                <a href="{{ url_for('static', filename=asset.image_path) }}" target="_blank" class="badge bg-secondary text-decoration-none">Preview</a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Asset Invoice Upload -->
+                    <div class="custom-form-group mb-0">
+                        <label class="custom-form-label">Invoice PDF / Receipt</label>
+                        <div class="file-upload-wrapper" id="invoice-dropzone">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <p class="small text-muted mb-0">Drag and drop, or click to upload invoice</p>
+                            <input type="file" class="file-upload-input d-none" id="invoice" name="invoice" accept="application/pdf,image/*">
+                        </div>
+                        {% if asset and asset.invoice_path %}
+                            <div class="mt-2 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-paperclip text-success"></i>
+                                <span class="small text-muted text-truncate" style="max-width: 250px;">{{ asset.invoice_path.split('/')[-1] }}</span>
+                                <a href="{{ url_for('static', filename=asset.invoice_path) }}" target="_blank" class="badge bg-secondary text-decoration-none">Preview</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Submission Footer Actions -->
+        <div class="col-12 text-end mb-5">
+            <hr class="border-secondary my-4">
+            <a href="{{ url_for('assets.list_assets') }}" class="btn btn-secondary-premium me-2">Cancel</a>
+            <button type="submit" class="btn btn-premium">
+                <i class="fa-solid fa-save"></i> Save Asset
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const statusSelect = document.getElementById('status');
+        const employeeContainer = document.getElementById('employee_assignment_container');
+        const notesContainer = document.getElementById('assignment_notes_container');
+        const employeeSelect = document.getElementById('assigned_employee_id');
+
+        function toggleEmployeeField() {
+            if (statusSelect.value === 'Assigned') {
+                employeeContainer.style.display = 'block';
+                employeeSelect.setAttribute('required', 'required');
+                if (notesContainer) notesContainer.style.display = 'block';
+            } else {
+                employeeContainer.style.display = 'none';
+                employeeSelect.removeAttribute('required');
+                if (notesContainer) notesContainer.style.display = 'none';
+            }
+        }
+
+        // Run on load
+        toggleEmployeeField();
+
+        // Listen on changes
+        statusSelect.addEventListener('change', toggleEmployeeField);
+        
+        // Setup separate dropzones for multi-input drag and drop
+        setupDropzone('image-dropzone', 'image');
+        setupDropzone('invoice-dropzone', 'invoice');
+    });
+
+    function setupDropzone(zoneId, inputId) {
+        const dropzone = document.getElementById(zoneId);
+        const fileInput = document.getElementById(inputId);
+        
+        if (!dropzone || !fileInput) return;
+        
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                const fileName = fileInput.files[0].name;
+                const sizeKB = (fileInput.files[0].size / 1024).toFixed(1);
+                dropzone.querySelector('p').innerHTML = `<strong>Selected:</strong> ${fileName} (${sizeKB} KB)`;
+                dropzone.querySelector('i').className = 'fa-solid fa-circle-check text-success';
+            }
+        });
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = 'var(--accent-primary)';
+                dropzone.style.background = 'rgba(255, 255, 255, 0.05)';
+            }, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.style.borderColor = 'var(--border-color)';
+                dropzone.style.background = 'var(--bg-input)';
+            }, false);
+        });
+        
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}QR Scanner - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4 text-center">
+        <h1 class="h2 mb-1" style="font-family: var(--font-heading);">QR Code Scanner</h1>
+        <p class="text-muted mb-0">Scan an asset's QR code label to fetch records and execute quick actions</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="glass-panel p-4 text-center">
+                <!-- Camera Viewport Box -->
+                <div class="scanner-viewport-wrapper">
+                    <div id="qr-reader" style="width: 100%; height: 100%;"></div>
+                    <div class="scanner-overlay" id="scanner-overlay">
+                        <div class="scanner-box"></div>
+                    </div>
+                </div>
+                
+                <!-- Feedback panel -->
+                <div class="my-3">
+                    <h5 class="h6 text-muted mb-1" id="scanner-status">Initializing camera...</h5>
+                    <div class="spinner-border spinner-border-sm text-info mt-1" role="status" id="scanner-spinner">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    <button class="btn btn-secondary-premium btn-sm" id="btn-toggle-camera">
+                        <i class="fa-solid fa-camera"></i> Start/Stop Camera
+                    </button>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <!-- Mock Simulation Box -->
+                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
+                    <h6 class="text-light mb-2"><i class="fa-solid fa-laptop-code text-info me-1"></i> Scan Simulator</h6>
+                    <p class="small text-muted mb-3">No webcam or camera access? Type an Asset ID manually to simulate a successful scan decode.</p>
+                    
+                    <div class="input-group">
+                        <input type="text" class="custom-form-control font-monospace" id="mock-code-input" placeholder="e.g. AST-0001">
+                        <button class="btn btn-premium px-3" type="button" id="btn-mock-scan">
+                            <i class="fa-solid fa-circle-play"></i> Decode
+                        </button>
+                    </div>
+                    <div class="text-danger small mt-2 d-none" id="mock-error-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- html5-qrcode library from CDN -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<!-- QR Scanner Javascript Controller -->
+<script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+{% endblock %}

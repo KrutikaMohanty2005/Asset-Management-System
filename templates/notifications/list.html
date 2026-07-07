@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Notifications</h1>
+            <p class="page-subtitle">System alerts and important updates</p>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-header">
+            <h2 class="table-title"><i class="fa-solid fa-bell"></i> All Notifications</h2>
+            <span class="count-badge">{{ notifications|length }}</span>
+        </div>
+        
+        {% if notifications %}
+            <div class="notification-list">
+                {% for notif in notifications %}
+                    <div class="notification-item {{ notif.type }}">
+                        <div class="notification-icon {{ notif.type }}">
+                            <i class="fa-solid {{ notif.icon }}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <h4 class="notification-title">{{ notif.title }}</h4>
+                            <p class="notification-detail">{{ notif.detail }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-bell-slash"></i>
+                <p>No notifications at this time</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

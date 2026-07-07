@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Employees - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="h2 mb-1" style="font-family: var(--font-heading);">Employee Management</h1>
+        <p class="text-muted mb-0">Maintain personnel records and trace their assigned company property</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Employees Directory (Left Column) -->
+        <div class="col-12 col-lg-8">
+            <div class="glass-panel p-0 overflow-hidden">
+                <div class="p-4 border-bottom border-secondary d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0" style="font-family: var(--font-heading);"><i class="fa-solid fa-users me-2 text-primary"></i> Directory</h3>
+                    <span class="badge bg-secondary font-monospace">{{ employees|length }} Total</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table custom-table align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">ID</th>
+                                <th>Name</th>
+                                <th>Dept & Role</th>
+                                <th>Contact Details</th>
+                                <th>Assigned Assets</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 120px;" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if employees %}
+                                {% for emp in employees %}
+                                    <tr {% if edit_employee and edit_employee.id == emp.id %}style="background: rgba(0, 242, 254, 0.05); border-left: 3px solid var(--accent-primary);"{% endif %}>
+                                        <td class="font-monospace fw-bold text-info">{{ emp.employee_id }}</td>
+                                        <td>
+                                            <div class="fw-semibold">{{ emp.name }}</div>
+                                        </td>
+                                        <td>
+                                            <div>{{ emp.department or '-' }}</div>
+                                            <div class="text-muted small">{{ emp.designation or '-' }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="small"><i class="fa-solid fa-envelope text-muted me-1"></i> {{ emp.email }}</div>
+                                            {% if emp.contact %}
+                                                <div class="small text-muted"><i class="fa-solid fa-phone text-muted me-1"></i> {{ emp.contact }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% set assigned_assets = emp.assets|selectattr('status', 'equalto', 'Assigned')|list %}
+                                            {% if assigned_assets %}
+                                                <span class="badge bg-primary" title="{% for asset in assigned_assets %}{{ asset.asset_id }}: {{ asset.name }}{% if not loop.last %}, {% endif %}{% endfor %}">
+                                                    {{ assigned_assets|length }} Asset(s)
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted small">None</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if emp.status == 'Active' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-muted{% endif %}" style="padding: 5px 10px; border-radius: 6px;">
+                                                {{ emp.status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex gap-2">
+                                                <a href="{{ url_for('employees.edit_employee', id=emp.id) }}" class="btn btn-sm btn-secondary-premium" title="Edit Record" style="padding: 6px 12px;">
+                                                    <i class="fa-solid fa-pen text-info"></i>
+                                                </a>
+                                                
+                                                {% if session.get('role') in ['admin', 'manager'] %}
+                                                    <form method="POST" action="{{ url_for('employees.delete_employee', id=emp.id) }}" onsubmit="return confirm('Are you sure you want to delete this employee?');" style="display:inline;">
+                                                        <button type="submit" class="btn btn-sm btn-secondary-premium" title="Delete Employee" style="padding: 6px 12px;">
+                                                            <i class="fa-solid fa-trash text-danger"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">
+                                        <i class="fa-solid fa-users-slash mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                                        <p class="mb-0">No employees registered yet.</p>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Employee Form Panel (Right Column) -->
+        <div class="col-12 col-lg-4">
+            <div class="glass-panel p-4">
+                <h3 class="h5 mb-4 text-primary" style="font-family: var(--font-heading);">
+                    {% if edit_employee %}
+                        <i class="fa-solid fa-user-pen me-2"></i> Edit Employee Details
+                    {% else %}
+                        <i class="fa-solid fa-user-plus me-2"></i> Add New Employee
+                    {% endif %}
+                </h3>
+
+                <form method="POST" action="{% if edit_employee %}{{ url_for('employees.edit_employee', id=edit_employee.id) }}{% else %}{{ url_for('employees.list_employees') }}{% endif %}">
+                    <!-- Employee ID -->
+                    <div class="custom-form-group">
+                        <label for="employee_id" class="custom-form-label">Employee ID *</label>
+                        <input type="text" class="custom-form-control font-monospace text-info fw-bold" id="employee_id" name="employee_id" 
+                               value="{% if edit_employee %}{{ edit_employee.employee_id }}{% else %}{{ suggested_id }}{% endif %}" 
+                               readonly required style="opacity: 0.75;">
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="custom-form-group">
+                        <label for="name" class="custom-form-label">Full Name *</label>
+                        <input type="text" class="custom-form-control" id="name" name="name" 
+                               value="{% if edit_employee %}{{ edit_employee.name }}{% endif %}" placeholder="e.g. Jane Smith" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="custom-form-group">
+                        <label for="email" class="custom-form-label">Email Address *</label>
+                        <input type="email" class="custom-form-control" id="email" name="email" 
+                               value="{% if edit_employee %}{{ edit_employee.email }}{% endif %}" placeholder="jane.smith@company.com" required>
+                    </div>
+
+                    <!-- Contact Phone -->
+                    <div class="custom-form-group">
+                        <label for="contact" class="custom-form-label">Contact Number</label>
+                        <input type="text" class="custom-form-control" id="contact" name="contact" 
+                               value="{% if edit_employee %}{{ edit_employee.contact or '' }}{% endif %}" placeholder="+1-555-0144">
+                    </div>
+
+                    <!-- Department -->
+                    <div class="custom-form-group">
+                        <label for="department" class="custom-form-label">Department</label>
+                        <input type="text" class="custom-form-control" id="department" name="department" 
+                               value="{% if edit_employee %}{{ edit_employee.department or '' }}{% endif %}" placeholder="e.g. Engineering">
+                    </div>
+
+                    <!-- Designation / Role -->
+                    <div class="custom-form-group">
+                        <label for="designation" class="custom-form-label">Designation</label>
+                        <input type="text" class="custom-form-control" id="designation" name="designation" 
+                               value="{% if edit_employee %}{{ edit_employee.designation or '' }}{% endif %}" placeholder="e.g. Senior Frontend Engineer">
+                    </div>
+
+                    <!-- Status (Visible only when editing) -->
+                    {% if edit_employee %}
+                        <div class="custom-form-group">
+                            <label for="status" class="custom-form-label">Status</label>
+                            <select class="custom-form-control" id="status" name="status">
+                                <option value="Active" {% if edit_employee.status == 'Active' %}selected{% endif %}>Active</option>
+                                <option value="Inactive" {% if edit_employee.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                    {% endif %}
+
+                    <!-- Form submission -->
+                    <div class="mt-4 pt-2 d-flex gap-2">
+                        {% if edit_employee %}
+                            <a href="{{ url_for('employees.list_employees') }}" class="btn btn-secondary-premium w-100 justify-content-center">Cancel</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-premium w-100 justify-content-center">
+                            <i class="fa-solid fa-save"></i> Save Record
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

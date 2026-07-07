@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Asset Management System{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-subtitle">Asset management analytics and summaries</p>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-desktop"></i></div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Assets</h3>
+                <div class="stat-number">{{ total_assets }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Employees</h3>
+                <div class="stat-number">{{ total_employees }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fa-solid fa-truck"></i></div>
+            <div class="stat-content">
+                <h3 class="stat-label">Total Vendors</h3>
+                <div class="stat-number">{{ total_vendors }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-dollar-sign"></i></div>
+            <div class="stat-content">
+                <h3 class="stat-label">Maintenance Cost</h3>
+                <div class="stat-number">${{ "{:,.2f}".format(total_maintenance_cost) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-row">
+        <!-- Asset Status Summary -->
+        <div class="chart-card">
+            <h2 class="chart-title">Asset Status Summary</h2>
+            <div class="summary-list">
+                <div class="summary-item">
+                    <span class="summary-label">Assigned</span>
+                    <div class="summary-bar"><div class="bar-fill assigned" style="width: {{ (assigned_count / total_assets * 100) if total_assets > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ assigned_count }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Available</span>
+                    <div class="summary-bar"><div class="bar-fill available" style="width: {{ (available_count / total_assets * 100) if total_assets > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ available_count }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Maintenance</span>
+                    <div class="summary-bar"><div class="bar-fill maintenance" style="width: {{ (maintenance_count / total_assets * 100) if total_assets > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ maintenance_count }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Retired</span>
+                    <div class="summary-bar"><div class="bar-fill retired" style="width: {{ (retired_count / total_assets * 100) if total_assets > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ retired_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Summary -->
+        <div class="chart-card">
+            <h2 class="chart-title">Maintenance Summary</h2>
+            <div class="summary-list">
+                <div class="summary-item">
+                    <span class="summary-label">Completed</span>
+                    <div class="summary-bar"><div class="bar-fill available" style="width: {{ (completed_maintenance / (completed_maintenance + pending_maintenance) * 100) if (completed_maintenance + pending_maintenance) > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ completed_maintenance }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Pending</span>
+                    <div class="summary-bar"><div class="bar-fill maintenance" style="width: {{ (pending_maintenance / (completed_maintenance + pending_maintenance) * 100) if (completed_maintenance + pending_maintenance) > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ pending_maintenance }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assets by Category -->
+        <div class="chart-card">
+            <h2 class="chart-title">Assets by Category</h2>
+            <div class="summary-list">
+                {% for cat in category_stats %}
+                    <div class="summary-item">
+                        <span class="summary-label">{{ cat.name }}</span>
+                        <div class="summary-bar"><div class="bar-fill blue" style="width: {{ (cat.count / total_assets * 100) if total_assets > 0 else 0 }}%"></div></div>
+                        <span class="summary-value">{{ cat.count }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

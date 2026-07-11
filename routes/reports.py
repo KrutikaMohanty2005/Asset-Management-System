@@ -1,7 +1,9 @@
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, Response
 from routes.auth import login_required
 from models import db, Asset, Employee, MaintenanceLog, AssetAssignment, Category, Vendor, Location
 from sqlalchemy import func
+import csv
+import io
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -65,4 +67,84 @@ def reports_view():
         active_employees=active_employees,
         recent_assignments=recent_assignments,
         total_vendors=total_vendors
+    )
+
+@reports_bp.route('/export/assets')
+@login_required()
+def export_assets_csv():
+    assets = Asset.query.all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Asset ID', 'Name', 'Category', 'Brand/Model', 'Serial Number', 'Purchase Date', 'Purchase Cost', 'Warranty Expiry', 'Location', 'Status', 'Assigned To', 'Vendor'])
+    for asset in assets:
+        writer.writerow([
+            asset.asset_id,
+            asset.name,
+            asset.category.name if asset.category else '',
+            asset.brand_model or '',
+            asset.serial_number or '',
+            asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else '',
+            asset.purchase_cost or '',
+            asset.warranty_expiry.strftime('%Y-%m-%d') if asset.warranty_expiry else '',
+            asset.location.name if asset.location else '',
+            asset.status,
+            asset.assigned_employee.name if asset.assigned_employee else 'Unassigned',
+            asset.vendor.name if asset.vendor else ''
+        ])
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=assets_report.csv'}
+    )
+
+@reports_bp.route('/export/maintenance')
+@login_required()
+def export_maintenance_csv():
+    logs = MaintenanceLog.query.all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Asset ID', 'Asset Name', 'Request Date', 'Service Date', 'Vendor', 'Cost', 'Status', 'Remarks'])
+    for log in logs:
+        writer.writerow([
+            log.asset.asset_id if log.asset else '',
+            log.asset.name if log.asset else '',
+            log.request_date.strftime('%Y-%m-%d %H:%M') if log.request_date else '',
+            log.service_date.strftime('%Y-%m-%d %H:%M') if log.service_date else '',
+            log.vendor.name if log.vendor else '',
+            log.cost or '',
+            log.status,
+            log.remarks or ''
+        ])
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=maintenance_report.csv'}
+    )
+
+@reports_bp.route('/export/employees')
+@login_required()
+def export_employees_csv():
+    employees = Employee.query.all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Employee ID', 'Name', 'Department', 'Designation', 'Email', 'Contact', 'Status', 'Assigned Assets'])
+    for emp in employees:
+        assigned_count = Asset.query.filter_by(assigned_employee_id=emp.id, status='Assigned').count()
+        writer.writerow([
+            emp.employee_id,
+            emp.name,
+            emp.department or '',
+            emp.designation or '',
+            emp.email,
+            emp.contact or '',
+            emp.status,
+            assigned_count
+        ])
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=employees_report.csv'}
     )

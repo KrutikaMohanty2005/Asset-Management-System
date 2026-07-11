@@ -26,12 +26,10 @@ class Config:
     # SQLite Settings
     SQLITE_DB_PATH = os.getenv('SQLITE_DB_PATH', 'asset_management.db')
 
-    @property
-    def SQLALCHEMY_DATABASE_URI(self):
-        if self.DB_TYPE == 'mysql':
-            # Format: mysql+pymysql://username:password@host:port/database
-            return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DB}"
-        else:
-            return f"sqlite:///{os.path.join(self.BASE_DIR, self.SQLITE_DB_PATH)}"
+    if DB_TYPE == 'mysql':
+        SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+    else:
+        _base = os.path.abspath(os.path.dirname(__file__))
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(_base, SQLITE_DB_PATH)}"
             
     SQLALCHEMY_TRACK_MODIFICATIONS = False

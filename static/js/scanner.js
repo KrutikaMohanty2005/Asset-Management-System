@@ -39,7 +39,7 @@ function initQRScanner() {
             const mockValue = mockInput.value.trim();
             if (!mockValue) return;
             
-            mockError.classList.add('d-none');
+            mockError.style.display = 'none';
             sendDecodeRequest(mockValue, mockError);
         });
         
@@ -60,7 +60,7 @@ function startScanner() {
     
     isScanning = true;
     statusText.textContent = "Requesting camera permissions...";
-    spinner.classList.remove('d-none');
+    spinner.style.display = 'block';
     overlay.style.display = 'flex';
     
     // Instantiate Html5Qrcode
@@ -76,11 +76,11 @@ function startScanner() {
         onScanFailure
     ).then(() => {
         statusText.textContent = "Scanning... Align QR code inside square box.";
-        spinner.classList.add('d-none');
+        spinner.style.display = 'none';
     }).catch(err => {
         console.error("Camera start error: ", err);
         statusText.textContent = "Camera access failed. Use the Simulator below.";
-        spinner.classList.add('d-none');
+        spinner.style.display = 'none';
         overlay.style.display = 'none';
         isScanning = false;
     });
@@ -129,13 +129,11 @@ async function sendDecodeRequest(codeText, errorContainer) {
         const data = await response.json();
         
         if (data.success) {
-            // Redirect to scan results page
             window.location.href = data.redirect_url;
         } else {
-            // Display error and restart scanner if it was running
             if (errorContainer) {
                 errorContainer.textContent = data.message;
-                errorContainer.classList.remove('d-none');
+                errorContainer.style.display = 'block';
             }
             
             const statusText = document.getElementById("scanner-status");
@@ -143,11 +141,10 @@ async function sendDecodeRequest(codeText, errorContainer) {
                 statusText.textContent = `Lookup Failed: ${data.message}`;
             }
             
-            // Wait 3 seconds and attempt to resume scanner
             setTimeout(() => {
                 if (document.getElementById("qr-reader") && !isScanning) {
                     startScanner();
-                    if (errorContainer) errorContainer.classList.add('d-none');
+                    if (errorContainer) errorContainer.style.display = 'none';
                 }
             }, 3000);
         }
@@ -155,7 +152,7 @@ async function sendDecodeRequest(codeText, errorContainer) {
         console.error("Decode request error: ", err);
         if (errorContainer) {
             errorContainer.textContent = "Server communication failure.";
-            errorContainer.classList.remove('d-none');
+            errorContainer.style.display = 'block';
         }
     }
 }

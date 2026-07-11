@@ -9,6 +9,17 @@
             <h1 class="page-title">Reports</h1>
             <p class="page-subtitle">Asset management analytics and summaries</p>
         </div>
+        <div class="header-actions">
+            <a href="{{ url_for('reports.export_assets_csv') }}" class="btn-action btn-outline-action">
+                <i class="fa-solid fa-download"></i> Export Assets CSV
+            </a>
+            <a href="{{ url_for('reports.export_maintenance_csv') }}" class="btn-action btn-outline-action">
+                <i class="fa-solid fa-download"></i> Export Maintenance CSV
+            </a>
+            <a href="{{ url_for('reports.export_employees_csv') }}" class="btn-action btn-outline-action">
+                <i class="fa-solid fa-download"></i> Export Employees CSV
+            </a>
+        </div>
     </div>
 
     <!-- Summary Stats -->
@@ -102,5 +113,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Location Stats -->
+    {% if location_stats %}
+    <div class="chart-card" style="margin-top: 16px;">
+        <h2 class="chart-title">Assets by Location</h2>
+        <div class="summary-list">
+            {% for loc in location_stats %}
+                <div class="summary-item">
+                    <span class="summary-label">{{ loc.name }}</span>
+                    <div class="summary-bar"><div class="bar-fill green" style="width: {{ (loc.count / total_assets * 100) if total_assets > 0 else 0 }}%"></div></div>
+                    <span class="summary-value">{{ loc.count }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

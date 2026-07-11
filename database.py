@@ -1,10 +1,20 @@
-import pymysql
 from models import db, User, Category, Location, Vendor, Settings
 import os
 
 def init_db(app):
     db_type = app.config.get('DB_TYPE', 'mysql')
     
+    if db_type == 'mysql':
+        try:
+            import pymysql
+        except ImportError:
+            print("[Database Warning] pymysql not installed. Falling back to SQLite...")
+            db_type = 'sqlite'
+            app.config['DB_TYPE'] = 'sqlite'
+            base_dir = app.config.get('BASE_DIR', os.path.abspath(os.path.dirname(__file__)))
+            sqlite_path = os.path.join(base_dir, app.config.get('SQLITE_DB_PATH', 'asset_management.db'))
+            app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{sqlite_path}"
+        
     if db_type == 'mysql':
         mysql_user = app.config.get('MYSQL_USER', 'root')
         mysql_password = app.config.get('MYSQL_PASSWORD', 'root')
@@ -13,7 +23,6 @@ def init_db(app):
         mysql_db = app.config.get('MYSQL_DB', 'asset_management')
         
         try:
-            # Connect to MySQL Server without specifying DB to create it if not exists
             conn = pymysql.connect(
                 host=mysql_host,
                 user=mysql_user,
@@ -28,9 +37,9 @@ def init_db(app):
         except Exception as e:
             print(f"[Database Warning] Failed to connect to MySQL: {e}")
             print("[Database Warning] Falling back to local SQLite database...")
-            # Modify app config for SQLite fallback
             app.config['DB_TYPE'] = 'sqlite'
-            sqlite_path = os.path.join(app.config.get('BASE_DIR', ''), app.config.get('SQLITE_DB_PATH', 'asset_management.db'))
+            base_dir = app.config.get('BASE_DIR', os.path.abspath(os.path.dirname(__file__)))
+            sqlite_path = os.path.join(base_dir, app.config.get('SQLITE_DB_PATH', 'asset_management.db'))
             app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{sqlite_path}"
     
     # Initialize SQLAlchemy with the Flask App

@@ -150,6 +150,10 @@ def add_asset():
         purchase_cost = request.form.get('purchase_cost')
         purchase_cost = float(purchase_cost) if purchase_cost else None
         
+        if purchase_cost is not None and purchase_cost < 0:
+            flash('Purchase cost cannot be negative.', 'danger')
+            return redirect(url_for('assets.add_asset'))
+        
         warranty_expiry_str = request.form.get('warranty_expiry')
         warranty_expiry = datetime.strptime(warranty_expiry_str, '%Y-%m-%d').date() if warranty_expiry_str else None
         
@@ -256,6 +260,10 @@ def edit_asset(id):
         
         purchase_cost = request.form.get('purchase_cost')
         asset.purchase_cost = float(purchase_cost) if purchase_cost else None
+        
+        if asset.purchase_cost is not None and asset.purchase_cost < 0:
+            flash('Purchase cost cannot be negative.', 'danger')
+            return redirect(url_for('assets.edit_asset', id=id))
         
         warranty_expiry_str = request.form.get('warranty_expiry')
         asset.warranty_expiry = datetime.strptime(warranty_expiry_str, '%Y-%m-%d').date() if warranty_expiry_str else None
